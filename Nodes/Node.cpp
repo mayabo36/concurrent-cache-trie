@@ -23,10 +23,17 @@ public:
 
 class ANode : public AnyNode {
 public:
-	ANode() = default;
 	virtual ~ANode() {}
 
-	AnyNode * arr[16];
+	AnyNode * wide[16];
+	AnyNode * narrow[4];
+	bool isWide; 
+
+	ANode() {
+		wide = NULL;
+		narrow = NULL;
+		isWide = false;
+	}
 };
 
 class SNode : public AnyNode {
@@ -48,6 +55,7 @@ public:
 		std::cout << "test" << std::endl;
 	}
 };
+
 class ENode : public AnyNode {
 public:
 	virtual ~ENode() {}
@@ -68,6 +76,13 @@ public:
 	void avoid5() {
 		std::cout << "this is that N which has the fifth glyph ..." << std::endl;
 	}
+};
+
+class Cache : public AnyNode {
+public:
+	virtual ~Cache() {}
+
+	Cache * arr[16];
 };
 
 // 3. (Test) program that uses the class defined in the API
