@@ -30,6 +30,13 @@ public:
 	bool isWide; 
 
 	ANode() {
+		// Initialilize values to null
+		for(int i = 0; i < 16; i++){
+			wide[i] = NULL;
+		}
+		for(int i = 0; i < 4; i++) {
+			narrow[i] = NULL;
+		}
 		isWide = false;
 	}
 };

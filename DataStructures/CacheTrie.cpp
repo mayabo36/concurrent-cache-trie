@@ -25,6 +25,8 @@ void insert(ANode root, std::string value) {
     sn.value = value;
     root.wide[location] = &sn;
 
+    std::cout << root.wide[location] << std::endl;
+
     // for(int i = 0; i < key.length(); i++) {
     //     int index = key[i] - 'a';
         
@@ -62,19 +64,20 @@ int main() {
     ANode an;
 
     for(int i = 0; i < n; i++) {
-        std::cout << "test";
-       insert(an, values[n]);
+        std::cout << "inserting " << values[i] << std::endl;
+        insert(an, values[i]);
     }
 
     for(int i = 0; i < 16; i++) {
-        std::cout << "test";
         if(an.wide[i] != NULL){
-            std::cout << dynamic_cast<SNode*>(an.wide[i])->value << std::endl;
+                    std::cout << "Test" << std::endl;
+
+            std::string type = typeid(*an.wide[i]).name();
+            if (type == typeid(SNode).name()) {
+                std::cout << an.wide[i] << std::endl;
+            }
         }
     }
-
-    // search(root, "the") ? std::cout << "Yes\n" : std::cout << "No\n";
-    // search(root, "these") ? std::cout << "Yes\n" : std::cout << "No\n";
 
     return 0;
 }
