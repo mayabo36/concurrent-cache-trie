@@ -1,52 +1,114 @@
 #include <iostream>
-using namespace std;
+#include <typeinfo>
+#include <string>
 
-// Base class
-class AnyNode
-{
-	public:
+enum Txn { NoTxn, FSNode, FVNode };
 
-	void test() {
-		cout << "test";
+class AnyNode {
+public:
+	virtual void test() {
+		std::cout << "test";
 	}
 };
 
-class SNode : public AnyNode
-{
-	public:
+class FNode : public AnyNode {
+public:
+	FNode() = default;
+	virtual ~FNode() {}
+
+	void fun() {
+		std::cout << "two plus two equals four" << std::endl << "... the more you know" << std::endl;
+	}
+};
+
+class ANode : public AnyNode {
+public:
+	ANode() = default;
+	virtual ~ANode() {}
+
+	AnyNode * arr[16];
+};
+
+class SNode : public AnyNode {
+public:
+	virtual ~SNode() {}
+
+	int hash;
+	int key;
+	std::string value;
+	Txn txn;
+
+	SNode() {
+		int hash = 0;
+		int key = 0;
+		Txn txn = NoTxn;
+	}
 
 	void readTest() {
-		cout << "test 1";
+		std::cout << "test" << std::endl;
+	}
+};
+class ENode : public AnyNode {
+public:
+	virtual ~ENode() {}
+
+	ANode parent;
+	int parentPos;
+	ANode narrow;
+	int hash;
+	int level;
+	ANode wide;
+
+	ENode() {
+		int parentPos = 0;
+		int hash = 0;
+		int level = 0;
+	}
+
+	void avoid5() {
+		std::cout << "this is that N which has the fifth glyph ..." << std::endl;
 	}
 };
 
-class FNode : public AnyNode
-{
+// 3. (Test) program that uses the class defined in the API
+int main(int argc, char** argv) {
+	FNode f1;
+	FNode f2;
+	FNode f3;
+	SNode s1;
+	ENode e1;
+	e1.parentPos = 1;
 
-};
+	ANode a1;
 
-class ANode : public AnyNode
-{
-	public:
-		AnyNode *arr[16];
-};
+	a1.arr[0] = &f1;
+	a1.arr[1] = &f2;
+	a1.arr[2] = &f3;
+	a1.arr[3] = &s1;
+	a1.arr[4] = &e1;
 
-class ENode : public AnyNode
-{
-	public:
-		ANode parent;
-		int parentPos;
-		ANode narrow;
-		int hash;
-		int level;
-		ANode wide;
-};
+	for (int k = 0; k < 5; k++) {
+		std::string type = typeid(*a1.arr[k]).name();
+		if (type == typeid(FNode).name()) {
+			FNode * temp = dynamic_cast<FNode*>(a1.arr[k]);
+			std::cout << "FNode stuff... " << std::endl;
+			temp->fun();
+		}
+		else if (type == typeid(SNode).name()) {
+			SNode * temp = dynamic_cast<SNode*>(a1.arr[k]);
+			std::cout << "SNode stuff... " << std::endl;
+			temp->readTest();
+		}
+		else if (type == typeid(ENode).name()) {
+			ENode * temp = dynamic_cast<ENode*>(a1.arr[k]);
+			std::cout << "ENode stuff... " << std::endl;
+			std::cout << "Parent position is: " << temp->parentPos << std::endl;
+			temp->avoid5();
+		}
+		else {
+			std::cout << "dont know this one..." << std::endl;
+		}
+	}
 
-
-int main()
-{
-	cout << "hello";
-	SNode sn;
-	sn.test();
 	return 0;
 }
