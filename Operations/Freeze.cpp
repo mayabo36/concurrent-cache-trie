@@ -1,7 +1,7 @@
 //After the node is frozen, it is guaranteed that no operation will ever modify that node again. 
 //This is important for expanding a narrow ANode.
 
-/*
+
 def completeExpansion(en: ENode) = freeze(en.narrow)
 var wide = new Array <Any >(16) copy(en.narrow, wide, en.level) if (!CAS(en.wide, null, wide))
 wide = READ(en.wide) CAS(en.parent[en.parentpos], en, wide)
@@ -21,7 +21,7 @@ i -= 1
 else if (node ∈ FNode) freeze(node.frozen) else if (node ∈ ENode)
 completeExpansion(node)
 i -= 1 i += 1
-*/
+
 
 int main(int argc, char** argv)
 {
