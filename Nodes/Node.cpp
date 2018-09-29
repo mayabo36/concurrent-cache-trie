@@ -30,8 +30,6 @@ public:
 	bool isWide; 
 
 	ANode() {
-		wide = NULL;
-		narrow = NULL;
 		isWide = false;
 	}
 };
@@ -40,13 +38,13 @@ class SNode : public AnyNode {
 public:
 	virtual ~SNode() {}
 
-	int hash;
+	std::size_t hash;
 	int key;
 	std::string value;
 	Txn txn;
 
 	SNode() {
-		int hash = 0;
+		std::size_t hash = 0;
 		int key = 0;
 		Txn txn = NoTxn;
 	}
@@ -78,12 +76,30 @@ public:
 	}
 };
 
+// Cache that contains an array of pointers to type AnyNode.
 class Cache : public AnyNode {
 public:
 	virtual ~Cache() {}
 
-	Cache * arr[16];
+	AnyNode * arr[16];
+
+	Cache() {
+	}
 };
+
+class CacheNode : public AnyNode {
+	public virtual CacheNode() {};
+
+	AnyNode parent[];
+	
+	int misses[];
+
+	CacheNode() {
+		
+	}
+};
+
+
 
 // 3. (Test) program that uses the class defined in the API
 int main(int argc, char** argv) {
@@ -96,26 +112,26 @@ int main(int argc, char** argv) {
 
 	ANode a1;
 
-	a1.arr[0] = &f1;
-	a1.arr[1] = &f2;
-	a1.arr[2] = &f3;
-	a1.arr[3] = &s1;
-	a1.arr[4] = &e1;
+	a1.wide[0] = &f1;
+	a1.wide[1] = &f2;
+	a1.wide[2] = &f3;
+	a1.wide[3] = &s1;
+	a1.wide[4] = &e1;
 
 	for (int k = 0; k < 5; k++) {
-		std::string type = typeid(*a1.arr[k]).name();
+		std::string type = typeid(*a1.wide[k]).name();
 		if (type == typeid(FNode).name()) {
-			FNode * temp = dynamic_cast<FNode*>(a1.arr[k]);
+			FNode * temp = dynamic_cast<FNode*>(a1.wide[k]);
 			std::cout << "FNode stuff... " << std::endl;
 			temp->fun();
 		}
 		else if (type == typeid(SNode).name()) {
-			SNode * temp = dynamic_cast<SNode*>(a1.arr[k]);
+			SNode * temp = dynamic_cast<SNode*>(a1.wide[k]);
 			std::cout << "SNode stuff... " << std::endl;
 			temp->readTest();
 		}
 		else if (type == typeid(ENode).name()) {
-			ENode * temp = dynamic_cast<ENode*>(a1.arr[k]);
+			ENode * temp = dynamic_cast<ENode*>(a1.wide[k]);
 			std::cout << "ENode stuff... " << std::endl;
 			std::cout << "Parent position is: " << temp->parentPos << std::endl;
 			temp->avoid5();
