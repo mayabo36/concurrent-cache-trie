@@ -62,6 +62,7 @@ int main() {
     ANode an;
 
     for(int i = 0; i < n; i++) {
+        std::cout << "test";
        insert(an, values[n]);
     }
 
