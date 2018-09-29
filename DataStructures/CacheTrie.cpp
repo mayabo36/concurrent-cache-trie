@@ -10,14 +10,20 @@
 
 
 // Key is the word being inserted
-void insert(ANode root, std::string key) {
+void insert(ANode root, std::string value) {
 
-    std::size_t hash = std::hash<std::string>{}(key);
-    std::cout << "The hash of " << key << " is " << hash << "\n";
+    std::size_t hash = std::hash<std::string>{}(value);
+    std::cout << "The hash of " << value << " is " << hash << "\n";
 
     // add logic for wide vs narrow; for now assume wide
     int location = hash % 16;
     std::cout << "Location is " << location << "\n";
+
+    // insert an SNode for the key in root at location
+    SNode sn;
+    sn.hash = hash;
+    sn.value = value;
+    root.wide[location] = &sn;
 
     // for(int i = 0; i < key.length(); i++) {
     //     int index = key[i] - 'a';
@@ -50,16 +56,21 @@ bool search(ANode root, std::string key) {
 }
 
 int main() {
-    std::string keys[] = {"the", "a", "there", "answer", "any", "by", "bye", "their"};
-    int n = sizeof(keys) / sizeof(keys[0]);
+    std::string values[] = {"melissa", "emily", "ashton", "rebeca"};
+    int n = sizeof(values) / sizeof(values[0]);
 
     ANode an;
 
-    insert(an, "melissa");
+    for(int i = 0; i < n; i++) {
+       insert(an, values[n]);
+    }
 
-    // for(int i = 0; i < n; i++) {
-    //     insert(root, keys[i]);
-    // }
+    for(int i = 0; i < 16; i++) {
+        std::cout << "test";
+        if(an.wide[i] != NULL){
+            std::cout << dynamic_cast<SNode*>(an.wide[i])->value << std::endl;
+        }
+    }
 
     // search(root, "the") ? std::cout << "Yes\n" : std::cout << "No\n";
     // search(root, "these") ? std::cout << "Yes\n" : std::cout << "No\n";
