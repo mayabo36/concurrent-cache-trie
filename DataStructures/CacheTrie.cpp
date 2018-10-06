@@ -25,7 +25,7 @@ void insert(ANode root, std::string value) {
     sn.value = value;
     root.wide[location] = &sn;
 
-    std::cout << root.wide[location] << std::endl;
+    //std::cout << root.wide[location] << std::endl;
 
     // for(int i = 0; i < key.length(); i++) {
     //     int index = key[i] - 'a';
@@ -62,19 +62,34 @@ int main() {
     int n = sizeof(values) / sizeof(values[0]);
 
     ANode an;
+    SNode sn;
+    // sn.value = "test";
+    // an.wide[0] = &sn;
+    // SNode sn2;
+    // sn2.value = "test 2";
+    // an.wide[1] = &sn;
 
     for(int i = 0; i < n; i++) {
         std::cout << "inserting " << values[i] << std::endl;
+
+        // this may not work bc c++ does not pass by reference? need to change to ptr?
         insert(an, values[i]);
+
+        // SNode sn;
+        // sn.hash = 123;
+        // sn.value = values[i];
+        // an.wide[i] = &sn;
     }
 
-    for(int i = 0; i < 16; i++) {
-        if(an.wide[i] != NULL){
-                    std::cout << "Test" << std::endl;
+    std::cout << "\n" << std::endl;
 
-            std::string type = typeid(*an.wide[i]).name();
+    for(int i = 0; i < 16; i++) {
+        if(an.wide[i] != nullptr || an.wide[i] != NULL){
+            std::cout << "test" << std::endl;
+            std::string type = typeid(an.wide[i]).name();
             if (type == typeid(SNode).name()) {
-                std::cout << an.wide[i] << std::endl;
+                SNode * temp = dynamic_cast<SNode*>(an.wide[i]);
+                std::cout << temp->value << std::endl;
             }
         }
     }
