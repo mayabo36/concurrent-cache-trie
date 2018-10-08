@@ -39,7 +39,7 @@ else if (oldNodeType == typeid(SNode).name()) {
         else if (cur.length == 4) 
             val ppos = (h >> (lev- 4)&)prev.length - 1)
             val en = new ENode(prev, ppos, cur, h, lev)
-            if (CAS(prev[ppos], cur, en)){
+            if (compare_exchange_weak(prev[ppos], cur, en)){
                 completeExpansion(en);
                 AnyNode wide = READ(en.wide); //type wide is an AnyNode Array
                 return insert(key, v, h, lev, wide, prev);
@@ -51,8 +51,8 @@ else if (oldNodeType == typeid(SNode).name()) {
         else
             val sn = new SNode(h, k, v, NoTxn);
             val an = createANode(old, sn, lev + 4);
-            if (CAS(old.txn, NoTxn, an)) {
-                CAS(cur[pos], old, an);
+            if (compare_exchange_weak(old.txn, NoTxn, an)) {
+                compare_exchange_weak(cur[pos], old, an);
                 return true;
             }
             else {
@@ -62,7 +62,7 @@ else if (oldNodeType == typeid(SNode).name()) {
         return false 
     }
     else {
-        CAS(cur[pos], old, txn);
+        compare_exchange_weak(cur[pos], old, txn);
         return insert(k, v, h, lev, cur, prev);
     }
 }
