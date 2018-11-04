@@ -6,7 +6,9 @@
 #include <string>
 #include <functional>
 #include <iostream>
-#include "../Nodes/Node.cpp"
+#include "../Nodes/ANode.h"
+#include "../Nodes/AnyNode.h"
+#include "../Nodes/SNode.h"
 
 
 // Key is the word being inserted
@@ -16,12 +18,12 @@ void insert(ANode *root, std::string value) {
     // Operations.insert()
 
     std::size_t hash = std::hash<std::string>{}(value);
-    std::cout << "The hash of " << value << " is " << hash << "\n";
+    //std::cout << "The hash of " << value << " is " << hash << "\n";
 
     // we always start at the root node, which is wide
     // Calculate the hash to find corresponding ANode location
     int location = hash % 16;
-    std::cout << "Location is " << location << "\n";
+    //std::cout << "Location is " << location << "\n";
 
     // Check if location contains a reference to an ANode or if it is open or occupied by an SNode
     // If there is an ANode reference, then we must traverse deeper into the trie
@@ -30,7 +32,7 @@ void insert(ANode *root, std::string value) {
 
     // if open insert an SNode here
     // For now, we immediately insert an SNode for the key in root at location
-    anynode an;
+    AnyNode an;
     SNode sn;
     sn.hash = hash;
     sn.value = value;
@@ -78,18 +80,11 @@ int main() {
         // an->wide[i] = &sn;
     }
 
-    std::cout << "\n" << std::endl;
+    std::cout << "test" << std::endl;
 
-    // for(int i = 0; i < 16; i++) {
-    //    // if(an->wide[i] != 0 ){
-    //         std::cout << "test" << std::endl;
-    //         std::string type = typeid(an->wide[i]).name();
-    //         if (type == typeid(SNode).name()) {
-    //             SNode temp = (SNode)(an->wide[i]);
-    //             std::cout << temp.value << std::endl;
-    //         }
-    //    // }
-    // }
+    for(int i = 0; i < 16; i++) {
+      an->wide[i].sayHi();
+    }
 
     return 0;
 }
