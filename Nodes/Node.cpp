@@ -1,47 +1,59 @@
 #include <iostream>
 #include <typeinfo>
 #include <string>
+#include <cstdlib>
 
 enum Txn { NoTxn, FSNode, FVNode };
 
-class AnyNode {
-public:
-	virtual void test() {
-		std::cout << "test";
-	}
-};
+// class AnyNode {
+// public:
+// 	virtual void test() {
+// 		std::cout << "test";
+// 	}
+// };
 
-class FNode : public AnyNode {
-public:
-	FNode() = default;
-	virtual ~FNode() {}
+typedef struct anynode {
+	ANode anode;
+	SNode snode;
+} anynode;
 
-	void fun() {
-		std::cout << "two plus two equals four" << std::endl << "... the more you know" << std::endl;
-	}
-};
+// class FNode : public AnyNode {
+// public:
+// 	FNode() = default;
+// 	virtual ~FNode() {}
 
-class ANode : public AnyNode {
+// 	void fun() {
+// 		std::cout << "two plus two equals four" << std::endl << "... the more you know" << std::endl;
+// 	}
+// };
+
+class ANode{
 public:
 	virtual ~ANode() {}
 
-	AnyNode * wide[16];
-	AnyNode * narrow[4];
+	struct anynode* wide;
+	struct anynode* narrow;
 	bool isWide; 
 
 	ANode() {
-		// Initialilize values to null
-		for(int i = 0; i < 16; i++){
-			wide[i] = NULL;
-		}
-		for(int i = 0; i < 4; i++) {
-			narrow[i] = NULL;
-		}
+		// Initialize values to 0
+		wide = (anynode*)malloc(16 * sizeof(struct anynode));
+
+		narrow = (anynode*)malloc(4 * sizeof(struct anynode));
+
 		isWide = false;
 	}
 };
 
-class SNode : public AnyNode {
+// Need to add constructor
+struct ANode {
+	struct anynode* wide;
+	struct anynode* narrow;
+	bool isWide;
+}
+
+// Need to transform to struct
+class SNode{
 public:
 	virtual ~SNode() {}
 
@@ -60,51 +72,57 @@ public:
 		std::cout << "test" << std::endl;
 	}
 };
-class ENode : public AnyNode {
-public:
-	virtual ~ENode() {}
 
-	ANode parent;
-	int parentPos;
-	ANode narrow;
-	int hash;
-	int level;
-	ANode wide;
+typedef struct anynode {
+	ANode anode;
+	SNode snode;
+} anynode;
 
-	ENode() {
-		int parentPos = 0;
-		int hash = 0;
-		int level = 0;
-	}
+// class ENode : public AnyNode {
+// public:
+// 	virtual ~ENode() {}
 
-	void avoid5() {
-		std::cout << "this is that N which has the fifth glyph ..." << std::endl;
-	}
-};
+// 	ANode parent;
+// 	int parentPos;
+// 	ANode narrow;
+// 	int hash;
+// 	int level;
+// 	ANode wide;
 
-// Cache that contains an array of pointers to type AnyNode.
-class Cache : public AnyNode {
-public:
-	virtual ~Cache() {}
+// 	ENode() {
+// 		int parentPos = 0;
+// 		int hash = 0;
+// 		int level = 0;
+// 	}
 
-	AnyNode * arr[16];
+// 	void avoid5() {
+// 		std::cout << "this is that N which has the fifth glyph ..." << std::endl;
+// 	}
+// };
 
-	Cache() {
-	}
-};
+// // Cache that contains an array of pointers to type AnyNode.
+// class Cache : public AnyNode {
+// public:
+// 	virtual ~Cache() {}
 
-class CacheNode : public AnyNode {
-public: 
-	virtual ~CacheNode() {};
+// 	AnyNode * arr[16];
 
-	AnyNode parent[];
+// 	Cache() {
+// 	}
+// };
+
+// class CacheNode : public AnyNode {
+// public: 
+// 	virtual ~CacheNode() {};
+
+// 	AnyNode parent[];
 	
-	int misses[];
+// 	int misses[];
 
-	CacheNode() {
+// 	CacheNode() {
 		
-	}
-};
+// 	}
+// };
 
 
 

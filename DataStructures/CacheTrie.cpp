@@ -30,10 +30,13 @@ void insert(ANode *root, std::string value) {
 
     // if open insert an SNode here
     // For now, we immediately insert an SNode for the key in root at location
+    anynode an;
     SNode sn;
     sn.hash = hash;
     sn.value = value;
-    root->wide[location] = &sn; // THIS LINE SEG FAULTS :(
+
+    an.snode = sn;
+    root->wide[location] = an; // THIS LINE SEG FAULTS :(
 
     // if occupied, then we must do some extra checks
 
@@ -77,16 +80,16 @@ int main() {
 
     std::cout << "\n" << std::endl;
 
-    for(int i = 0; i < 16; i++) {
-        if(an->wide[i] != nullptr || an->wide[i] != NULL){
-            std::cout << "test" << std::endl;
-            std::string type = typeid(an->wide[i]).name();
-            if (type == typeid(SNode).name()) {
-                SNode * temp = dynamic_cast<SNode*>(an->wide[i]);
-                std::cout << temp->value << std::endl;
-            }
-        }
-    }
+    // for(int i = 0; i < 16; i++) {
+    //    // if(an->wide[i] != 0 ){
+    //         std::cout << "test" << std::endl;
+    //         std::string type = typeid(an->wide[i]).name();
+    //         if (type == typeid(SNode).name()) {
+    //             SNode temp = (SNode)(an->wide[i]);
+    //             std::cout << temp.value << std::endl;
+    //         }
+    //    // }
+    // }
 
     return 0;
 }
