@@ -3,37 +3,37 @@
 #include <string>
 #include <cstdlib>
 
-enum Txn { NoTxn, FSNode, FVNode};
+// enum Txn { NoTxn, FSNode, FVNode};
 
-struct ANode;
-struct SNode;
+// struct ANode;
+// struct SNode;
 
-struct AnyNode {
-	struct ANode anode;
-	struct SNode snode;
-};
+// struct AnyNode {
+// 	struct ANode anode;
+// 	struct SNode snode;
+// };
 
-struct ANode {
-	struct AnyNode* wide;
-	struct AnyNode* narrow;
-	bool isWide;
+// struct ANode {
+// 	struct AnyNode* wide;
+// 	struct AnyNode* narrow;
+// 	bool isWide;
 
-	ANode() {
-		wide = (struct AnyNode *) malloc(16 * sizeof(struct AnyNode));
-		narrow = (struct AnyNode *) malloc(4 * sizeof(struct AnyNode));
-		isWide = false;
-	}
+// 	ANode() {
+// 		wide = (struct AnyNode *) malloc(16 * sizeof(struct AnyNode));
+// 		narrow = (struct AnyNode *) malloc(4 * sizeof(struct AnyNode));
+// 		isWide = false;
+// 	}
 
-};
+// };
 
-struct SNode {
-	std::size_t hash;
-	int key;
-	std::string value;
-	Txn txn;
+// struct SNode {
+// 	std::size_t hash;
+// 	int key;
+// 	std::string value;
+// 	Txn txn;
 
-	SNode() : hash(0), key(0), txn(NoTxn) {}
-};
+// 	SNode() : hash(0), key(0), txn(NoTxn) {}
+// };
 
 
 
