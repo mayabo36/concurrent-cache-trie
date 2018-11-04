@@ -1,6 +1,7 @@
 #include <iostream>
 #include <typeinfo>
 #include <string>
+#include <cstdlib>
 
 enum Txn { NoTxn, FSNode, FVNode };
 
@@ -25,18 +26,16 @@ class ANode : public AnyNode {
 public:
 	virtual ~ANode() {}
 
-	AnyNode * wide[16];
-	AnyNode * narrow[4];
+	AnyNode * wide;
+	AnyNode * narrow;
 	bool isWide; 
 
 	ANode() {
-		// Initialilize values to null
-		for(int i = 0; i < 16; i++){
-			wide[i] = NULL;
-		}
-		for(int i = 0; i < 4; i++) {
-			narrow[i] = NULL;
-		}
+		// Initialilize values to 0
+		wide = (AnyNode *)calloc(16, sizeof(AnyNode)); 
+
+		narrow = (AnyNode *)calloc(4, sizeof(AnyNode));
+
 		isWide = false;
 	}
 };
@@ -51,9 +50,9 @@ public:
 	Txn txn;
 
 	SNode() {
-		std::size_t hash = 0;
-		int key = 0;
-		Txn txn = NoTxn;
+		hash = 0;
+		key = 0;
+		txn = NoTxn;
 	}
 
 	void readTest() {
@@ -72,9 +71,9 @@ public:
 	ANode wide;
 
 	ENode() {
-		int parentPos = 0;
-		int hash = 0;
-		int level = 0;
+		parentPos = 0;
+		hash = 0;
+		level = 0;
 	}
 
 	void avoid5() {
@@ -97,7 +96,7 @@ class CacheNode : public AnyNode {
 public: 
 	virtual ~CacheNode() {};
 
-	AnyNode parent[];
+	AnyNode parent[16];
 	
 	int misses[];
 
