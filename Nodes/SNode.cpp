@@ -1,16 +1,11 @@
-/**
-    A leaf node in the cache-trie. Holds a key-value pair, the corresponding hash code,
-    and a txn field.
-**/
+#include <iostream>
+#include <typeinfo>
+#include <string>
+#include <cstdlib>
+#include "SNode.h"
 
-using namespace std;
-
-class SNode {
-
-    // Access specifier:
-    public:
-    int hash;
-    int key;
-    string value;
-    Txn txn;
+SNode::SNode() {
+    hash = 0;
+    key = 0;
+    txn = NoTxn;
 }
