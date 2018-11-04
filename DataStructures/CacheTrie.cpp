@@ -6,7 +6,11 @@
 #include <string>
 #include <functional>
 #include <iostream>
-#include "../Nodes/Node.cpp"
+#include "../Nodes/ANode.h"
+#include "../Nodes/AnyNode.h"
+#include "../Nodes/SNode.h"
+
+
 
 
 // Key is the word being inserted
@@ -30,7 +34,7 @@ void insert(ANode *root, std::string value) {
 
     // if open insert an SNode here
     // For now, we immediately insert an SNode for the key in root at location
-    anynode an;
+    AnyNode an;
     SNode sn;
     sn.hash = hash;
     sn.value = value;
