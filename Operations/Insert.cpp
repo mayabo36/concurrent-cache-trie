@@ -11,7 +11,7 @@ int pos = (h >> lev)&(cur.length - 1);
 std::string oldNodeType = typeid(*cur.wide[cur[pos]]).name();
 
 int old = READ(cur[pos]);
-if (oldNodeType  == NULL) {
+if (oldNodeType == NULL) {
     SNode sn = new SNode(h, key, v, NoTxn);
     if (CAS(cur[pos], old, sn)) {
         return true;

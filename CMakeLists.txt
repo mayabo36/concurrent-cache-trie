@@ -3,9 +3,9 @@ PROJECT(concurrent-cache-trie)
 
 # CMake configuration
 #-------------------------------------------------------------------------------
-if(CMAKE_COMPILER_IS_GNUCXX)
+
     add_definitions(-std=c++11)
-endif()
+
 
 # Qt5 configuration
 #-------------------------------------------------------------------------------
