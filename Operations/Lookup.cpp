@@ -37,12 +37,10 @@ class String lookup(String key, int hash, int lev, ANode cur){
     }
     else if (old.nodeType() == typeid(SNode).name()) 
     {
-        if (old.key == key) 
-        {
+        if (old.key == key) {
             return old.value
         }
-        else 
-        {
+        else {
             return null; 
         }
     }
