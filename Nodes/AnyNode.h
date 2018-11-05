@@ -6,7 +6,9 @@
 struct AnyNode {
 	ANode anode;
 	SNode snode;
+	bool isSNode;
 
+	AnyNode();
 	void sayHi();
 };
 
