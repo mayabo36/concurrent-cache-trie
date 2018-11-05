@@ -8,7 +8,7 @@ enum Txn { NoTxn, FSNode, FVNode};
 
 struct SNode {
 	std::size_t hash;
-	int key;
+	//int key;
 	std::string value;
 	Txn txn;
 
