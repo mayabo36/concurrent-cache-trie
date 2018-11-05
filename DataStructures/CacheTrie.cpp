@@ -32,12 +32,13 @@ void insert(ANode *root, std::string value) {
 
     // if open insert an SNode here
     // For now, we immediately insert an SNode for the key in root at location
-    AnyNode an;
+    AnyNode *an = new AnyNode();
     SNode sn;
     sn.hash = hash;
     sn.value = value;
 
-    an.snode = sn;
+    an->snode = sn;
+	std::cout << "putting data in: " << location << std::endl;
     root->wide[location] = an; // THIS LINE SEG FAULTS :(
 
     // if occupied, then we must do some extra checks
@@ -52,15 +53,16 @@ void insert(ANode *root, std::string value) {
 
 }
 
-bool search(ANode root, std::string key) {
-
-}
+//bool search(ANode root, std::string key) {
+//
+//}
 
 int main() {
     std::string values[] = {"melissa", "emily", "ashton", "rebeca"};
     int n = sizeof(values) / sizeof(values[0]);
 
-    ANode *an;
+	ANode *an = new ANode();
+
     // SNode *sn;
     // sn->value = "test";
     // an.wide[0] = &sn;
