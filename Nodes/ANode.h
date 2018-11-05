@@ -1,3 +1,5 @@
+#include <vector>
+
 #ifndef ANODE_H_GUARD
 #define ANODE_H_GUARD
 

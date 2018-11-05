@@ -40,7 +40,7 @@ void insert(ANode *&root, const std::string value) {
 
     an->snode = sn;
     an->isSNode = true;
-    tempRoot->wide[location] = an; // THIS LINE SEG FAULTS :(
+    tempRoot->wide[location] = an;
 
     // if occupied, then we must do some extra checks
 
@@ -71,12 +71,11 @@ int main() {
 
     for(int i = 0; i < 16; i++) {
         AnyNode* node = root->wide[i];
-        std::cout << node->isSNode << std::endl;
-        if(node->isSNode) {
-            // Un-comment at own risk; spooky prints may occur
-            std::cout << node->snode.value << std::endl;
+        if(node != 0){
+            if(node->isSNode) {
+                std::cout << node->snode.value << std::endl;
+            }
         }
-        root->wide[i]->sayHi();
     }
 
     return 0;
