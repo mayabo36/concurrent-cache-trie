@@ -5,7 +5,11 @@
 #include "SNode.h"
 #include "AnyNode.h"
 
+AnyNode::AnyNode() {
+    isSNode = false;
+}
+
 void AnyNode::sayHi() {
-    std::cout << "HI";
+    std::cout << "HI" << std::endl;
 }
 
