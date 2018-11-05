@@ -12,12 +12,14 @@
 
 
 // Key is the word being inserted
-void insert(ANode *root, std::string value) {
+void insert(ANode *&root, const std::string value) {
+
+    ANode* tempRoot = root;
 
     // check if we can insert or not
     // Operations.insert()
     std::size_t hash = std::hash<std::string>{}(value);
-    std::cout << "The hash of " << value << " is " << hash << "\n";
+    //std::cout << "The hash of " << value << " is " << hash << "\n";
 
     // we always start at the root node, which is wide
     // Calculate the hash to find corresponding ANode location
@@ -31,14 +33,14 @@ void insert(ANode *root, std::string value) {
 
     // if open insert an SNode here
     // For now, we immediately insert an SNode for the key in root at location
-    AnyNode an;
+    AnyNode* an = new AnyNode;
     SNode sn;
     sn.hash = hash;
     sn.value = value;
 
-    an.snode = sn;
-    an.isSNode = true;
-    root->wide[location] = &an; // THIS LINE SEG FAULTS :(
+    an->snode = sn;
+    an->isSNode = true;
+    tempRoot->wide[location] = an;
 
     // if occupied, then we must do some extra checks
 
@@ -64,25 +66,16 @@ int main() {
 
     for(int i = 0; i < n; i++) {
         std::cout << "inserting " << values[i] << std::endl;
-
-        // this may not work bc c++ does not pass by reference? need to change to ptr?
         insert(root, values[i]);
-
-        // SNode sn;
-        // sn.hash = 123;
-        // sn.value = values[i];
-        // an->wide[i] = &sn;
     }
-
-    std::cout << "test" << std::endl;
 
     for(int i = 0; i < 16; i++) {
         AnyNode* node = root->wide[i];
-        if(node->isSNode) {
-            // Un-comment at own risk; spooky prints may occur
-            //std::cout << node->snode.value << std::endl;
+        if(node != 0){
+            if(node->isSNode) {
+                std::cout << node->snode.value << std::endl;
+            }
         }
-        root->wide[i]->sayHi();
     }
 
     return 0;
