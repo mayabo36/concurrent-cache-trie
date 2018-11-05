@@ -6,6 +6,6 @@
 
 SNode::SNode() {
     hash = 0;
-    key = 0;
+    //key = 0;
     txn = NoTxn;
 }
