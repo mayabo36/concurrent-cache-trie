@@ -12,18 +12,19 @@
 
 
 // Key is the word being inserted
-void insert(ANode *root, std::string value) {
+void insert(ANode *&root, const std::string value) {
+
+    ANode* tempRoot = root;
 
     // check if we can insert or not
     // Operations.insert()
-
     std::size_t hash = std::hash<std::string>{}(value);
     //std::cout << "The hash of " << value << " is " << hash << "\n";
 
     // we always start at the root node, which is wide
     // Calculate the hash to find corresponding ANode location
     int location = hash % 16;
-    //std::cout << "Location is " << location << "\n";
+    std::cout << "Location is " << location << "\n";
 
     // Check if location contains a reference to an ANode or if it is open or occupied by an SNode
     // If there is an ANode reference, then we must traverse deeper into the trie
@@ -32,13 +33,14 @@ void insert(ANode *root, std::string value) {
 
     // if open insert an SNode here
     // For now, we immediately insert an SNode for the key in root at location
-    AnyNode an;
+    AnyNode* an = new AnyNode;
     SNode sn;
     sn.hash = hash;
     sn.value = value;
 
-    an.snode = sn;
-    root->wide[location] = an; // THIS LINE SEG FAULTS :(
+    an->snode = sn;
+    an->isSNode = true;
+    tempRoot->wide[location] = an; // THIS LINE SEG FAULTS :(
 
     // if occupied, then we must do some extra checks
 
@@ -60,30 +62,21 @@ int main() {
     std::string values[] = {"melissa", "emily", "ashton", "rebeca"};
     int n = sizeof(values) / sizeof(values[0]);
 
-    ANode *an;
-    // SNode *sn;
-    // sn->value = "test";
-    // an.wide[0] = &sn;
-    // SNode sn2;
-    // sn2.value = "test 2";
-    // an.wide[1] = &sn;
+    ANode* root = new ANode;
 
     for(int i = 0; i < n; i++) {
         std::cout << "inserting " << values[i] << std::endl;
-
-        // this may not work bc c++ does not pass by reference? need to change to ptr?
-        insert(an, values[i]);
-
-        // SNode sn;
-        // sn.hash = 123;
-        // sn.value = values[i];
-        // an->wide[i] = &sn;
+        insert(root, values[i]);
     }
 
-    std::cout << "test" << std::endl;
-
     for(int i = 0; i < 16; i++) {
-      an->wide[i].sayHi();
+        AnyNode* node = root->wide[i];
+        std::cout << node->isSNode << std::endl;
+        if(node->isSNode) {
+            // Un-comment at own risk; spooky prints may occur
+            std::cout << node->snode.value << std::endl;
+        }
+        root->wide[i]->sayHi();
     }
 
     return 0;
