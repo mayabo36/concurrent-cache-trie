@@ -16,7 +16,7 @@ ANode * root;
 
 
 // Key is the word being inserted
-bool insert(const std::string value, std::size_t hash, int level, ANode *& current, ANode *& previous) {
+bool insert(std::string value, std::size_t hash, int level, ANode *& current, ANode *& previous) {
 
     int position;
     if (current->isWide) position = hash % 16;
@@ -28,13 +28,13 @@ bool insert(const std::string value, std::size_t hash, int level, ANode *& curre
     if (old == 0) {
 
         // Setup node to be inserted
-        SNode snode;
+        SNode snode = SNode();
         snode.hash = hash;
         snode.value = value;
 
         AnyNode* newNode = new AnyNode;
         newNode->snode = snode;
-        newNode->isSNode = true;
+        newNode->nodeType = SNODE;
 
         if (current->wide[position].compare_exchange_weak(old, newNode)) return true;
 
@@ -42,23 +42,24 @@ bool insert(const std::string value, std::size_t hash, int level, ANode *& curre
     }
 
     // Check if the location is occupied by an ANode
-    else if (!old->isSNode) {
-
+    else if (old->nodeType == ANODE) {
+        ANode* oldANode = &old->anode;
+        return insert(value, hash, level + 4, oldANode, current); // May break everything, needs testing
     }
 
     // If the posistion is occupied by an SNode
-    else if (old->isSNode) {
+    else if (old->nodeType == SNODE) {
         Txn txn = old->snode.txn;
 
         if (txn == NoTxn) {
             if (old->snode.value == value) {
-                SNode snode;
+                SNode snode = SNode();
                 snode.hash = hash;
                 snode.value = value;
 
                 AnyNode* newNode = new AnyNode;
                 newNode->snode = snode;
-                newNode->isSNode = true;
+                newNode->nodeType = SNODE;
 
                 // Make Txn in snode atomic
                 // CAS on the txn to announce the snode
@@ -70,30 +71,40 @@ bool insert(const std::string value, std::size_t hash, int level, ANode *& curre
         return true;
     }
 
-    // Check if location contains a reference to an ANode or if it is open or occupied by an SNode
-    // If there is an ANode reference, then we must traverse deeper into the trie
+    // Check if the position is occupied an ENode
+    else if (old->nodeType == ENODE) {
+        // Complete expansion
 
-    // If not, then we either have an open or occupied location 
+    }
 
-    // if occupied, then we must do some extra checks
-
-    // if the keys match, then we can just update the value in the SNode
-
-    // if the keys do not match, and the ANode is narrow then we must expand the ANode
-    // after expanding we can insert the key-value pair
-
-    // if the keys do not match, and the ANode is wide then we create a new level in the trie
-    // this is done by inserting an ANode reference at location and adding the key-value pair at this new level
     return false;
 }
 
-bool insert(const std::string value){
-    std::cout << "performing an insert..." << std::endl;
+bool insert(std::string value){
+    std::cout << "performing an insert on '" << value << "'" << std::endl;
 
     ANode* node = NULL;
 
     if ( !insert(value, std::hash<std::string>{}(value), 0, root, node) )
         insert(value);
+}
+
+void completeExpansion(ENode *& en) {
+    // ANode wide = ANode();
+    // copy values from narrow to wide
+
+    // CAS on en.wide, null, new wide ANode
+
+    // CAS new wide anode where narrow anode was before
+}
+
+void freeze(ANode *& current) {
+    // int i  = 0;
+    // int length = ((current->isWide) ? 16 : 4);
+
+    // while (i < length) {
+        
+    // }
 }
 
 bool search(ANode root, std::string key) {
@@ -107,7 +118,6 @@ int main() {
     root = new ANode;
 
     for(int i = 0; i < n; i++) {
-        std::cout << "inserting a value" << std::endl;
         insert( values[i]);
     }
 
@@ -115,8 +125,8 @@ int main() {
     for(int i = 0; i < 16; i++) {
         AnyNode* node = tempRoot->wide[i];
         if(node != 0){
-            if(node->isSNode) {
-                std::cout << node->snode.value << std::endl;
+            if(node->nodeType == SNODE) {
+                std::cout << node->snode.value << " at location " << i << std::endl;
             }
         }
     }

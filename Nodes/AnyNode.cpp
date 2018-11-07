@@ -6,7 +6,7 @@
 #include "AnyNode.h"
 
 AnyNode::AnyNode() {
-    isSNode = false;
+    AnyNode::nodeType = NodeType::SNODE;
 }
 
 void AnyNode::sayHi() {

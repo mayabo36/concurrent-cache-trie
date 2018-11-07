@@ -1,12 +1,7 @@
+#include "ENode.h"
 
-
-// class ENode
-// {
-// public:
-// 	ANode parent;
-// 	const int parentPos;
-// 	ANode narrow;
-// 	const int hash;
-// 	const int level;
-// 	ANode wide;
-// };
+ENode::ENode() {
+    ENode::parentPos = 0;
+    ENode::level = 0;
+    ENode::hash = 0;
+}
