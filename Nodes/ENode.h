@@ -3,9 +3,9 @@
 #define ENODE_H_GUARD
 
 struct ENode {
-	ANode parent;
+	AnyNode* parent;
     int parentPos;
-    ANode narrow;
+    AnyNode* narrow;
     int hash;
     int level;
     ANode wide;
