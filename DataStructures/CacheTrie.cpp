@@ -210,7 +210,7 @@ void freeze(AnyNode *& current) {
                  if (!node->snode.txn.compare_exchange_weak(oldTxn, FSNode)) i--;
              }
              else if (oldTxn != FSNode) {
-                 
+
              }
         }
         else if (node->nodeType == ANODE) {
