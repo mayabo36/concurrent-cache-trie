@@ -61,7 +61,7 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 
     // If the posistion is occupied by an SNode
     else if (old->nodeType == SNODE) {
-        Txn txn = old->snode.txn;
+        Txn txn = old->txn;
 
         if (txn == NoTxn) {
             if (old->snode.value == value) {
@@ -71,7 +71,7 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
                 newNode->snode.value = value;
                 newNode->nodeType = SNODE;
                 
-                if (newNode->snode.txn.compare_exchange_weak(txn, txn)){ // Making sure NoTxn
+                if (newNode->txn.compare_exchange_weak(txn, txn)){ // Making sure NoTxn
                     current->anode.wide[position].compare_exchange_weak(old, newNode);
                     return true;
                 }
@@ -121,7 +121,7 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
                 snode2->nodeType = SNODE;
                 newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode2);
 
-                if (old->snode.txn.compare_exchange_weak(txn, txn)) {
+                if (old->txn.compare_exchange_weak(txn, txn)) {
                     if (current->anode.isWide) {
                         current->anode.wide[position].compare_exchange_weak(old, newNode);
                     } else {
@@ -201,13 +201,13 @@ void freeze(AnyNode *& current) {
         AnyNode* node = (current->anode.isWide ? current->anode.wide[i] : current->anode.narrow[i]);
 
         if (node == 0) {
-            Txn oldTxn = node->snode.txn;
-            if (!node->snode.txn.compare_exchange_weak(oldTxn, FVNode)) i--;
+            Txn oldTxn = node->txn;
+            if (!node->txn.compare_exchange_weak(oldTxn, FVNode)) i--;
         }
         else if (node->nodeType == SNODE) {
-             Txn oldTxn = node->snode.txn;
+             Txn oldTxn = node->txn;
              if (oldTxn == NoTxn) {
-                 if (!node->snode.txn.compare_exchange_weak(oldTxn, FSNode)) i--;
+                 if (!node->txn.compare_exchange_weak(oldTxn, FSNode)) i--;
              }
              else if (oldTxn != FSNode) {
 

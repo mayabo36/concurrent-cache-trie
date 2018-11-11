@@ -11,6 +11,7 @@ struct AnyNode {
 	SNode snode;
 	ENode enode;
 	NodeType nodeType;
+	std::atomic<Txn> txn {NoTxn};
 
 	AnyNode();
 	void sayHi();
