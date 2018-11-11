@@ -7,9 +7,6 @@
 #include "AnyNode.h"
 
 ANode::ANode() {
-    ANode::isWide = true;
-
-    // for(int i = 0; i < 16; i++) {
-    //     wide[i] = 0;
-    // }
+    ANode::isWide = false;
+    level = 0;
 }
