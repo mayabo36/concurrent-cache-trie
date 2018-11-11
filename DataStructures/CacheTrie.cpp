@@ -147,6 +147,7 @@ bool insert(std::string value){
         insert(value);
 }
 
+
 void completeExpansion(ENode *& en) {
     // ANode wide = ANode();
     // copy values from narrow to wide
