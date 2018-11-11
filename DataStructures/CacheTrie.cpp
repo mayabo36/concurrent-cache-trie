@@ -18,7 +18,7 @@ ANode * root;
 // Key is the word being inserted
 bool insert(std::string value, std::size_t hash, int level, ANode *& current, ANode *& previous) {
     
-    int position = (hash >> (level)) % ((current->isWide ? 16 : 4));
+    int position = (hash >> (level)) & ((current->isWide ? 16 : 4) - 1);
 
     std::cout << "performing an insert on '" << value << "'" << "at pos " << position << std::endl;
 
@@ -70,30 +70,45 @@ bool insert(std::string value, std::size_t hash, int level, ANode *& current, AN
                     return insert(value, hash, level, current, previous);
                 }
             } else if (!current->isWide) {
-                int previousPos = (hash >> (level - 4)) * ((previous->isWide ? 16 : 4) - 1);
+                int previousPos = (hash >> (level - 4)) & ((previous->isWide ? 16 : 4) - 1);
 
-                // TODO
-                std::cout << "Prev pos: " << previousPos << std::endl;
+                AnyNode* newNode = new AnyNode;
+                newNode->enode.parentPos = previousPos;
+                newNode->enode.hash = hash;
+                newNode->enode.level = level;
+                newNode->enode.parent = previous;
+                newNode->nodeType = ENODE;
+
+                // AnyNode* parentANode = previous->wide[previousPos];
+                // if (previous->wide[previousPos].compare_exchange_weak(&parentANode->anode, newNode)) {
+
+                // }
+
+
             } else {
                 AnyNode* newNode = new AnyNode;
                 newNode->anode.level = level + 4;
                 newNode->nodeType = ANODE;
 
                 AnyNode* temp;
- 
+
                 // Insert previous snode into new anode
                 AnyNode* snode1 = new AnyNode;
                 snode1->snode.hash = old->snode.hash;
                 snode1->snode.value = old->snode.value;
                 snode1->nodeType = SNODE;
-                newNode->anode.narrow[old->snode.hash % 4].compare_exchange_weak(temp, snode1);
+                newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode1);
 
                 // Insert new snode into new anode
                 AnyNode* snode2 = new AnyNode;
                 snode2->snode.hash = hash;
                 snode2->snode.value = value;
                 snode2->nodeType = SNODE;
-                newNode->anode.narrow[hash % 4].compare_exchange_weak(temp, snode2);
+                newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode2);
+
+                // int pos1 = (snode1->snode.hash >> (level + 4)) & (4 - 1);
+                // int pos2 = (snode2->snode.hash >> (level + 4)) & (4 - 1);
+                // std::cout << pos1 << " and " << pos2 << std::endl;
 
                 if (old->snode.txn.compare_exchange_weak(txn, txn)) {
                     if (current->isWide) {
