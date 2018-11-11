@@ -34,6 +34,7 @@ SET(HEADERS
     Nodes/ANode.h
     Nodes/AnyNode.h
     Nodes/SNode.h
+    Nodes/ENode.h
 )
 
 SET(SOURCES
@@ -42,6 +43,7 @@ SET(SOURCES
     Nodes/ANode.cpp
     Nodes/AnyNode.cpp
     Nodes/SNode.cpp
+    Nodes/ENode.cpp
 )
 
 
