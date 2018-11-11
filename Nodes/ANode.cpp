@@ -7,5 +7,6 @@
 #include "AnyNode.h"
 
 ANode::ANode() {
-    ANode::isWide = true;
+    ANode::isWide = false;
+    level = 0;
 }
