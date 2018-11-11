@@ -120,6 +120,9 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
                 snode2->nodeType = SNODE;
                 newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode2);
 
+                std::cout << old->snode.value << " at " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
+                std::cout << value << " at " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
+
                 if (old->txn.compare_exchange_weak(txn, txn)) {
                     if (current->anode.isWide) {
                         current->anode.wide[position].compare_exchange_weak(old, newNode);
@@ -299,8 +302,10 @@ int main() {
     }
     
     ANode* tempRoot = &root->anode;
+    std::cout << "\n\nTree Print:" << std::endl;
     printTree(tempRoot);
 
+    std::cout << "\n\Lookup Print:" << std::endl;
     for(int i = 0; i < n; i++) {
         std::string value = lookup(values[i]);
         if (value != "") std::cout << value << std::endl;
