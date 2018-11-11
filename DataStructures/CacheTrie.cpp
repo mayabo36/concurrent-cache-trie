@@ -21,6 +21,7 @@ void completeExpansion(AnyNode *& enode);
 void copyToWide(AnyNode *& node);
 void freeze(AnyNode *& current);
 std::string lookup(std::size_t hash, int level, AnyNode *& current);
+std::string lookup(std::string value);
 void printTree(ANode* anode);
 
 
@@ -215,9 +216,13 @@ void freeze(AnyNode *& current) {
         else if (node->nodeType == ANODE) {
             AnyNode* newNode;
             newNode->nodeType = FNODE;
+            newNode->fnode.frozen = node;
             if (current->anode.isWide) {
                 current->anode.wide[i].compare_exchange_weak(node, newNode);
             }
+        }
+        else if (node->nodeType == FNODE) {
+            freeze(node->fnode.frozen);
         }
         else if (node->nodeType == ENODE) {
             completeExpansion(node);
@@ -234,7 +239,7 @@ std::string lookup(std::size_t hash, int level, AnyNode *& current) {
     Txn txn = old->txn;
 
     if (old == 0 || txn == FVNode) {
-        return NULL;
+        return "";
     }
     else if (old->nodeType == ANODE) {
         return lookup(hash, level + 4, old);
@@ -243,7 +248,7 @@ std::string lookup(std::size_t hash, int level, AnyNode *& current) {
         if (old->snode.hash == hash) {
             return old->snode.value;
         }
-        else return NULL;
+        else return "";
     }
     else if (old->nodeType == ENODE) {
         AnyNode* an = old->enode.narrow;
@@ -252,6 +257,10 @@ std::string lookup(std::size_t hash, int level, AnyNode *& current) {
     else if (old->nodeType == FNODE) {
         return lookup(hash, level + 4, old->fnode.frozen);
     }
+}
+
+std::string lookup(std::string value) {
+    return lookup(std::hash<std::string>{}(value), 0, root);
 }
 
 void printTree(ANode* anode) {
@@ -286,14 +295,18 @@ int main() {
     root->anode.isWide = true;
 
     for(int i = 0; i < n; i++) {
-        //insert(std::rand());
         insert(values[i]);
     }
     
-    //copyToWide(root);
-
     ANode* tempRoot = &root->anode;
     printTree(tempRoot);
+
+    for(int i = 0; i < n; i++) {
+        std::string value = lookup(values[i]);
+        if (value != "") std::cout << value << std::endl;
+    }
+
+    
 
     return 0;
 }
