@@ -7,6 +7,7 @@ struct ANode {
 	std::atomic<struct AnyNode *> wide [16] = {};
 	std::atomic<struct AnyNode *> narrow [4] = {};
 	bool isWide;
+	int level;
 
 	ANode();
 };
