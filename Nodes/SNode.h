@@ -10,11 +10,17 @@ enum Txn { NoTxn, FSNode, FVNode};
 struct SNode {
 	std::size_t hash;
 	std::string value;
-	Txn txn;
-	//std::atomic<int> txn {0};
+	Txn txn = NoTxn;
 	//std::atomic<Txn> txn {NoTxn};
 
 	SNode();
-};
+
+	void swap(SNode& first, SNode& second);
+
+	SNode& operator = (SNode other) {
+		swap(*this, other);
+		return *this;
+	}; 
+ };
 
 #endif

@@ -27,13 +27,15 @@ bool insert(std::string value, std::size_t hash, int level, ANode *& current, AN
     // Check if the location is empty, if so insert the node there
     if (old == 0) {
 
-        // Setup node to be inserted
-        SNode snode = SNode();
-        snode.hash = hash;
-        snode.value = value;
+        // // Setup node to be inserted
+        // SNode snode = SNode();
+        // snode.hash = hash;
+        // snode.value = value;
 
         AnyNode* newNode = new AnyNode;
-        newNode->snode = snode;
+        newNode->snode = SNode();
+        newNode->snode.hash = hash;
+        newNode->snode.value = value;
         newNode->nodeType = SNODE;
 
         if (current->wide[position].compare_exchange_weak(old, newNode)) return true;
@@ -53,12 +55,14 @@ bool insert(std::string value, std::size_t hash, int level, ANode *& current, AN
 
         if (txn == NoTxn) {
             if (old->snode.value == value) {
-                SNode snode = SNode();
-                snode.hash = hash;
-                snode.value = value;
+                // SNode snode = SNode();
+                // snode.hash = hash;
+                // snode.value = value;
 
                 AnyNode* newNode = new AnyNode;
-                newNode->snode = snode;
+                newNode->snode = SNode();
+                newNode->snode.hash = hash;
+                newNode->snode.value = value;
                 newNode->nodeType = SNODE;
 
                 // Make Txn in snode atomic
