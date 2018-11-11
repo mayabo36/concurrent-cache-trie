@@ -20,7 +20,7 @@ bool insert(std::string value);
 void completeExpansion(AnyNode *& enode);
 void copyToWide(AnyNode *& node);
 void freeze(AnyNode *& current);
-bool search(ANode root, std::string key);
+std::string lookup(std::size_t hash, int level, AnyNode *& current);
 void printTree(ANode* anode);
 
 
@@ -91,15 +91,13 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 
                 AnyNode* parentANode = previous->anode.wide[previousPos];
                 if (previous->anode.wide[previousPos].compare_exchange_weak(parentANode, newNode)) {
-                    //completeExpansion(newNode);
-                    // AnyNode wide = READ(newNode->enode.wide);
-                    // return insert(value, hash, level, wide, previous);
+                    completeExpansion(newNode);
+                    AnyNode* wide = newNode->enode.parent->anode.wide[newNode->enode.parentPos];
+                    return insert(value, hash, level, wide, previous);
                 }
                 else {
                     return insert(value, hash, level, current, previous);
                 }
-
-
             } else {
                 AnyNode* newNode = new AnyNode;
                 newNode->anode.level = level + 4;
@@ -144,8 +142,7 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 
     // Check if the position is occupied an ENode
     else if (old->nodeType == ENODE) {
-        // Complete expansion
-
+        completeExpansion(old);
     }
 
     return false;
@@ -210,22 +207,51 @@ void freeze(AnyNode *& current) {
                  if (!node->txn.compare_exchange_weak(oldTxn, FSNode)) i--;
              }
              else if (oldTxn != FSNode) {
-
+                Txn oldTxn = node->txn;
+                // commit the pending changes ?
+                i--;
              }
         }
         else if (node->nodeType == ANODE) {
-
+            AnyNode* newNode;
+            newNode->nodeType = FNODE;
+            if (current->anode.isWide) {
+                current->anode.wide[i].compare_exchange_weak(node, newNode);
+            }
         }
         else if (node->nodeType == ENODE) {
-            
+            completeExpansion(node);
+            i--;
         }
-
         i++;
     }
 }
 
-bool search(ANode root, std::string key) {
+std::string lookup(std::size_t hash, int level, AnyNode *& current) {
+    int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
 
+    AnyNode* old = (current->anode.isWide ? current->anode.wide[position] : current->anode.narrow[position]);
+    Txn txn = old->txn;
+
+    if (old == 0 || txn == FVNode) {
+        return NULL;
+    }
+    else if (old->nodeType == ANODE) {
+        return lookup(hash, level + 4, old);
+    }
+    else if (old->nodeType == SNODE) {
+        if (old->snode.hash == hash) {
+            return old->snode.value;
+        }
+        else return NULL;
+    }
+    else if (old->nodeType == ENODE) {
+        AnyNode* an = old->enode.narrow;
+        return lookup(hash, level + 4, an);
+    }
+    else if (old->nodeType == FNODE) {
+        return lookup(hash, level + 4, old->fnode.frozen);
+    }
 }
 
 void printTree(ANode* anode) {
