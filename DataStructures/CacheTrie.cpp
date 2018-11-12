@@ -30,6 +30,8 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 
 	int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
 
+	std::cout << "will attempt an insert on '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
+
 	AnyNode* old;
 	if (current->anode.isWide) old = current->anode.wide[position];
 	else old = current->anode.narrow[position];
@@ -44,8 +46,8 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 
 		if (current->anode.isWide) {
 			if ( current->anode.wide[position].compare_exchange_weak(old, newNode)){
-                std::cout << "performing an insert on '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
-                return true;
+               std::cout << "performing an insert on '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
+                return true; 
             }
 			else return insert(value, hash, level, current, previous);
 		}
@@ -191,7 +193,8 @@ void copyToWide(AnyNode *& node) {
 
 	for (int i = 0; i < 4; i++) {
 		AnyNode* curr = node->anode.narrow[i];
-		if (curr != 0) {
+		Txn txn = curr->txn;
+		if (curr != 0 && txn != FVNode) {
 			switch (curr->nodeType) {
 			case SNODE:
 				// recalculate position and insert to wide
@@ -208,6 +211,8 @@ void copyToWide(AnyNode *& node) {
 	}
 
 	node->anode.isWide = true;
+	std::cout << "\nPrinting new expanded node!!!!" << std::endl;
+	printTree(&node->anode);
 }
 
 void freeze(AnyNode *& current) {
@@ -314,6 +319,7 @@ void printTree(ANode* anode) {
 			case ANODE:
 				std::cout << "Traverse anode at " << i << std::endl;
 				printTree(&node->anode);
+				std::cout << "End traversal anode at " << i << std::endl;
 				break;
 			}
 		}
@@ -322,7 +328,7 @@ void printTree(ANode* anode) {
 
 int main() {
 	// 45 words
-	std::string values[] = { "melissa", "emily", "ashton", "rebeca", "damian", "victor", "tyler", "pichi", "pom", "neo", "precious", "martha", "margarita", "augustine", "andrew", "andy", "aimie", "elyse", "kaylene", "josie", "mickey", "minnie", "howl", "sophie", "calcifer", "donald", "sora", "riku", "kairi", "axel", "cloud", "zach", "purple", "freddy", "jimmy", "hula", "sushi", "nori", "ramen", "aladin", "jasmine", "genie", "poca", "john", "smith" };
+	std::string values[] = { "melissa", "emily", "ashton", "rebeca", "damian", "victor", "tyler", "pichi", "pom", "neo", "precious", "martha", "margarita", "augustine", "andrew", "andy", "aimie", "elyse", "kaylene", "josie", "mickey", "minnie", "howl", "sophie", "calcifer", "donald", "sora", "riku", "kairi", "axel", "cloud", "zach", "purple", "freddy", "jimmy", "hula", "sushi"};// "nori", "ramen", "aladin", "jasmine", "genie", "poca", "john", "smith" };
 	int n = sizeof(values) / sizeof(values[0]);
 
 	root = new AnyNode;
