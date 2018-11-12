@@ -241,33 +241,33 @@ void freeze(AnyNode *& current) {
 }
 
 std::string lookup(std::size_t hash, int level, AnyNode *& current) {
+    
+    int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
 
-	int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
+    AnyNode* old = (current->anode.isWide ? current->anode.wide[position] : current->anode.narrow[position]);
 
-	AnyNode* old = (current->anode.isWide ? current->anode.wide[position] : current->anode.narrow[position]);
-
-	Txn txn;
-	if (old != 0) txn = old->txn;
-
-	if (old == 0 || txn == FVNode) {
-		return "";
-	}
-	else if (old->nodeType == ANODE) {
-		return lookup(hash, level + 4, old);
-	}
-	else if (old->nodeType == SNODE) {
-		if (old->snode.hash == hash) {
-			return old->snode.value;
-		}
-		else return "";
-	}
-	else if (old->nodeType == ENODE) {
-		AnyNode* an = old->enode.narrow;
-		return lookup(hash, level + 4, an);
-	}
-	else if (old->nodeType == FNODE) {
-		return lookup(hash, level + 4, old->fnode.frozen);
-	}
+    Txn txn;
+    if (old != 0) txn = old->txn;
+    
+    if (old == 0 || txn == FVNode) {
+        return "";
+    }
+    else if (old->nodeType == ANODE) {
+        return lookup(hash, level + 4, old);
+    }
+    else if (old->nodeType == SNODE) {
+        if (old->snode.hash == hash) {
+            return old->snode.value;
+        }
+        else return "";
+    }
+    else if (old->nodeType == ENODE) {
+        AnyNode* an = old->enode.narrow;
+        return lookup(hash, level + 4, an);
+    }
+    else if (old->nodeType == FNODE) {
+        return lookup(hash, level + 4, old->fnode.frozen);
+    }
 }
 
 std::string lookup(std::string value) {
@@ -316,13 +316,22 @@ int main() {
 
 	lookup("ashton");
 
-	std::cout << "\n\nLookup Print:" << std::endl;
-	for (int i = 0; i < n; i++) {
-		std::string value = lookup(values[i]);
-		if (value != "") std::cout << value << std::endl;
-	}
+    for(int i = 0; i < n; i++) {
+        insert(values[i]);
+    }
+    
+    ANode* tempRoot = &root->anode;
+    std::cout << "\n\nTree Print:" << std::endl;
+    printTree(tempRoot);
+    std::cout << "\n\n" << std::endl;
 
+    lookup("ashton");
 
+    std::cout << "\n\nLookup Print:" << std::endl;
+    for(int i = 0; i < n; i++) {
+        std::string value = lookup(values[i]);
+        if (value != "") std::cout << value << std::endl;
+    }
 
 	return 0;
 }
