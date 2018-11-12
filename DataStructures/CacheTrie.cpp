@@ -13,14 +13,17 @@
 #include "../Nodes/AnyNode.h"
 #include "../Nodes/SNode.h"
 
-CacheTrie::CacheTrie() {
+CacheTrie::CacheTrie(int num_threads) {
 
 	// instantiate root node to be a wide [16] array of anynodes
 	CacheTrie::root = new AnyNode;
 	root->anode.isWide = true;
 	root->nodeType = ANODE;
 
-	//
+	// Instantiate the cache head
+	CacheTrie::cacheHead = NULL;
+
+	CacheTrie::num_threads = num_threads;
 }
 
 // Key is the word being inserted
@@ -300,6 +303,18 @@ int CacheTrie::lookup(std::size_t hash, int level, AnyNode *& current) {
 
 int CacheTrie::lookup(int value) {
 	return lookup(std::hash<int>{}(value), 0, root);
+}
+
+AnyNode* CacheTrie::createCache(int level, AnyNode* parent []) {
+	AnyNode* cache [1 + (1 << level)];
+	int misses [num_threads]; // num_threads * THROUGHPUT_FACTOR ??
+
+	AnyNode* newCacheHead = new AnyNode;
+	newCacheHead->nodeType = CACHENODE;
+	newCacheHead->cachenode.misses = misses;
+	newCacheHead->cachenode.parent = NULL;
+
+	cache[0] = new AnyNode;
 }
 
 void CacheTrie::printTree(ANode* anode) {

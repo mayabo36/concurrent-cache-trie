@@ -4,6 +4,7 @@
 #include "ANode.h"
 #include "SNode.h"
 #include "AnyNode.h"
+#include "../DataStructures/CacheNode.h"
 
 AnyNode::AnyNode() {
     AnyNode::nodeType = NodeType::SNODE;
