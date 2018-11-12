@@ -7,5 +7,5 @@
 
 SNode::SNode() {
     SNode::hash = 0;
-    SNode::value = "";
+    SNode::value = 0;
 }
