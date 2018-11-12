@@ -7,7 +7,7 @@
 
 struct SNode {
 	std::size_t hash;
-	std::string value;
+	int value;
 
 	SNode();
  };
