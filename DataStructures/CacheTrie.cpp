@@ -6,31 +6,33 @@
 #include <string>
 #include <functional>
 #include <iostream>
+#include <unistd.h>
 #include <atomic> 
+#include "CacheTrie.h"
 #include "../Nodes/ANode.h"
 #include "../Nodes/AnyNode.h"
 #include "../Nodes/SNode.h"
 
-// Cache-trie global variables
-AnyNode * root;
+CacheTrie::CacheTrie() {
 
-// Declare functions
-bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, AnyNode *& previous);
-bool insert(std::string value);
-void completeExpansion(AnyNode *& enode);
-void copyToWide(AnyNode *& node);
-void freeze(AnyNode *& current);
-std::string lookup(std::size_t hash, int level, AnyNode *& current);
-std::string lookup(std::string value);
-void printTree(ANode* anode);
+	// instantiate root node to be a wide [16] array of anynodes
+	CacheTrie::root = new AnyNode;
+	root->anode.isWide = true;
+	root->nodeType = ANODE;
 
+	//
+}
 
 // Key is the word being inserted
-bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, AnyNode *& previous) {
+bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& current, AnyNode *& previous) {
+
+
+	// if (level > CacheTrie::max_level){
+	// 	int temp = max_level;
+	// 	max_level.compare_exchange_weak(temp, level);
+	// } 
 
 	int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
-
-	std::cout << "will attempt an insert on '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
 
 	AnyNode* old;
 	if (current->anode.isWide) old = current->anode.wide[position];
@@ -46,14 +48,12 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 
 		if (current->anode.isWide) {
 			if ( current->anode.wide[position].compare_exchange_weak(old, newNode)){
-               std::cout << "performing an insert on '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
                 return true; 
             }
 			else return insert(value, hash, level, current, previous);
 		}
 		else {
 			if (current->anode.narrow[position].compare_exchange_weak(old, newNode)){
-                std::cout << "performing an insert on '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
                 return true;
             }
 			else return insert(value, hash, level, current, previous);
@@ -81,7 +81,6 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 
 				if (newNode->txn.compare_exchange_weak(txn, txn)) { // Making sure NoTxn
 					current->anode.wide[position].compare_exchange_weak(old, newNode);
-					std::cout << "updating '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
 					return true;
 				}
 				else {
@@ -101,7 +100,6 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 
 				AnyNode* parentANode = previous->anode.wide[previousPos];
 				if (previous->anode.wide[previousPos].compare_exchange_weak(parentANode, newNode)) {
-					std::cout << "swapped anode with enode at at pos " << previousPos <<  " and level " << (level-4) << std::endl;
 					completeExpansion(newNode);
 					AnyNode* wide = newNode->enode.parent->anode.wide[newNode->enode.parentPos];
 					return insert(value, hash, level, wide, previous);
@@ -134,15 +132,9 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 				if (old->txn.compare_exchange_weak(txn, txn)) {
 					if (current->anode.isWide) {
 						current->anode.wide[position].compare_exchange_weak(old, newNode);
-						std::cout << "inserted a new anode at pos " << position <<  " and level " << newNode->anode.level << std::endl;
-						std::cout << "\t" << old->snode.value << " at " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
-						std::cout << "\t" << value << " at " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
 					}
 					else {
 						current->anode.narrow[position].compare_exchange_weak(old, newNode);
-						std::cout << "inserted a new anode at pos " << position <<  " and level " << newNode->anode.level << std::endl;
-						std::cout << "\t" << old->snode.value << " at " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
-						std::cout << "\t" << value << " at " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
 					}
 					return true;
 				}
@@ -168,27 +160,35 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 	return false;
 }
 
-bool insert(std::string value) {
+bool CacheTrie::insert(int value) {
 	AnyNode* node = NULL;
 
-	if (!insert(value, std::hash<std::string>{}(value), 0, root, node))
+	if (!insert(value, std::hash<int>{}(value), 0, root, node))
 		insert(value);
+
+
 }
 
-void completeExpansion(AnyNode *& enode) {
+void CacheTrie::testInsert() {
+
+	for (int i = 1; i < 251; i++) {
+		insert(i);
+	}
+}
+
+void CacheTrie::completeExpansion(AnyNode *& enode) {
 	
 	freeze(enode->enode.narrow);
 
 	copyToWide(enode->enode.narrow);
 
 	enode->enode.parent->anode.wide[enode->enode.parentPos].compare_exchange_weak(enode, enode->enode.narrow);
-	std::cout << "completed expanding anode at level " << enode->enode.level << std::endl;
-
 }
 
-void copyToWide(AnyNode *& node) {
+void CacheTrie::copyToWide(AnyNode *& node) {
 
 	int pos;
+	Txn txn;
 	AnyNode* temp = new AnyNode;
 
 	for (int i = 0; i < 4; i++) {
@@ -200,6 +200,9 @@ void copyToWide(AnyNode *& node) {
 				// recalculate position and insert to wide
 				pos = (curr->snode.hash >> (node->anode.level)) & (16 - 1);
 				temp = node->anode.wide[pos];
+				txn = curr->txn;
+				// Note: we need to change the txn value of the snode in the wide array to NoTxn after copying so other threads can modify it
+				curr->txn.compare_exchange_weak(txn, NoTxn);
 				node->anode.wide[pos].compare_exchange_weak(temp, curr);
 				break;
 			case ANODE:
@@ -211,11 +214,9 @@ void copyToWide(AnyNode *& node) {
 	}
 
 	node->anode.isWide = true;
-	std::cout << "\nPrinting new expanded node!!!!" << std::endl;
-	printTree(&node->anode);
 }
 
-void freeze(AnyNode *& current) {
+void CacheTrie::freeze(AnyNode *& current) {
 	int i = 0;
 	int length = ((current->anode.isWide) ? 16 : 4);
 
@@ -267,7 +268,7 @@ void freeze(AnyNode *& current) {
 	}
 }
 
-std::string lookup(std::size_t hash, int level, AnyNode *& current) {
+int CacheTrie::lookup(std::size_t hash, int level, AnyNode *& current) {
     
     int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
 
@@ -277,7 +278,7 @@ std::string lookup(std::size_t hash, int level, AnyNode *& current) {
     if (old != 0) txn = old->txn;
     
     if (old == 0 || txn == FVNode) {
-        return "";
+        return 0;
     }
     else if (old->nodeType == ANODE) {
         return lookup(hash, level + 4, old);
@@ -286,7 +287,7 @@ std::string lookup(std::size_t hash, int level, AnyNode *& current) {
         if (old->snode.hash == hash) {
             return old->snode.value;
         }
-        else return "";
+        else return 0;
     }
     else if (old->nodeType == ENODE) {
         AnyNode* an = old->enode.narrow;
@@ -297,11 +298,11 @@ std::string lookup(std::size_t hash, int level, AnyNode *& current) {
     }
 }
 
-std::string lookup(std::string value) {
-	return lookup(std::hash<std::string>{}(value), 0, root);
+int CacheTrie::lookup(int value) {
+	return lookup(std::hash<int>{}(value), 0, root);
 }
 
-void printTree(ANode* anode) {
+void CacheTrie::printTree(ANode* anode) {
 
 	int length = (anode->isWide ? 16 : 4);
 
@@ -317,36 +318,11 @@ void printTree(ANode* anode) {
 				std::cout << node->snode.value << " at location " << i << std::endl;
 				break;
 			case ANODE:
-				std::cout << "Traverse anode at " << i << std::endl;
+				std::cout << "Traverse anode at " << i << " and level " << (node->anode.level + 4) << std::endl;
 				printTree(&node->anode);
 				std::cout << "End traversal anode at " << i << std::endl;
 				break;
 			}
 		}
 	}
-}
-
-int main() {
-	// 45 words
-	std::string values[] = { "melissa", "emily", "ashton", "rebeca", "damian", "victor", "tyler", "pichi", "pom", "neo", "precious", "martha", "margarita", "augustine", "andrew", "andy", "aimie", "elyse", "kaylene", "josie", "mickey", "minnie", "howl", "sophie", "calcifer", "donald", "sora", "riku", "kairi", "axel", "cloud", "zach", "purple", "freddy", "jimmy", "hula", "sushi"};// "nori", "ramen", "aladin", "jasmine", "genie", "poca", "john", "smith" };
-	int n = sizeof(values) / sizeof(values[0]);
-
-	root = new AnyNode;
-	root->anode.isWide = true;
-
-	for (int i = 0; i < n; i++) {
-		insert(values[i]);
-	}
-   
-    ANode* tempRoot = &root->anode;
-    std::cout << "\n\nTree Print:" << std::endl;
-    printTree(tempRoot);
-
-    std::cout << "\n\nLookup Print:" << std::endl;
-    for(int i = 0; i < n; i++) {
-        std::string value = lookup(values[i]);
-        if (value != "") std::cout << value << std::endl;
-    }
-
-	return 0;
 }

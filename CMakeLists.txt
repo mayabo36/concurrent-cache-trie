@@ -4,7 +4,7 @@ PROJECT(concurrent-cache-trie)
 # CMake configuration
 #-------------------------------------------------------------------------------
 
-    add_definitions(-std=c++11)
+    add_definitions(-std=c++11 -pthread)
 
 
 # Qt5 configuration
@@ -21,6 +21,7 @@ INCLUDE_DIRECTORIES(
     DataStructures
     Nodes
     Operations
+    Testing
 )
 
 LINK_DIRECTORIES(
@@ -36,16 +37,19 @@ SET(HEADERS
     Nodes/SNode.h
     Nodes/ENode.h
     Nodes/FNode.h
+    DataStructures/CacheTrie.h
+    DataStructures/CacheNode.h
 )
 
 SET(SOURCES
-    DataStructures/Cache.cpp
+    DataStructures/CacheNode.cpp
     DataStructures/CacheTrie.cpp
     Nodes/ANode.cpp
     Nodes/AnyNode.cpp
     Nodes/SNode.cpp
     Nodes/ENode.cpp
     Nodes/FNode.cpp
+    Testing/TestProgram.cpp
 )
 
 
