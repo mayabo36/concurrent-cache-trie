@@ -309,7 +309,8 @@ void printTree(ANode* anode) {
 }
 
 int main() {
-	std::string values[] = { "melissa", "emily", "ashton", "rebeca", "damian", "victor", "tyler", "pichi", "pom", "neo", "precious" };
+	// 45 words
+	std::string values[] = { "melissa", "emily", "ashton", "rebeca", "damian", "victor", "tyler", "pichi", "pom", "neo", "precious", "martha", "margarita", "augustine", "andrew", "andy", "aimie", "elyse", "kaylene", "josie", "mickey", "minnie", "howl", "sophie", "calcifer", "donald", "sora", "riku", "kairi", "axel", "cloud", "zach", "purple", "freddy", "jimmy", "hula", "sushi", "nori", "ramen", "aladin", "jasmine", "genie", "poca", "john", "smith" };
 	int n = sizeof(values) / sizeof(values[0]);
 
 	root = new AnyNode;
