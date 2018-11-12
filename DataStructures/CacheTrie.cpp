@@ -1,5 +1,5 @@
 /**
-    Simple test trie for words. Feel free to play around with this.
+	Simple test trie for words. Feel free to play around with this.
 **/
 
 #include <cstddef>
@@ -12,201 +12,341 @@
 #include "../Nodes/SNode.h"
 
 // Cache-trie global variables
-ANode * root;
+AnyNode * root;
+
+// Declare functions
+bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, AnyNode *& previous);
+bool insert(std::string value);
+void completeExpansion(AnyNode *& enode);
+void copyToWide(AnyNode *& node);
+void freeze(AnyNode *& current);
+std::string lookup(std::size_t hash, int level, AnyNode *& current);
+std::string lookup(std::string value);
+void printTree(ANode* anode);
 
 
 // Key is the word being inserted
-bool insert(std::string value, std::size_t hash, int level, ANode *& current, ANode *& previous) {
-    
-    int position = (hash >> (level)) & ((current->isWide ? 16 : 4) - 1);
+bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, AnyNode *& previous) {
 
-    std::cout << "performing an insert on '" << value << "'" << "at pos " << position << std::endl;
+	int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
 
-    AnyNode* old;
-    if (current->isWide) old = current->wide[position];
-    else old = current->narrow[position];
+	std::cout << "will attempt an insert on '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
 
-    // Check if the position is empty, if so insert the node there
-    if (old == 0) {
+	AnyNode* old;
+	if (current->anode.isWide) old = current->anode.wide[position];
+	else old = current->anode.narrow[position];
 
-        AnyNode* newNode = new AnyNode;
-        newNode->snode.hash = hash;
-        newNode->snode.value = value;
-        newNode->nodeType = SNODE;
+	// Check if the position is empty, if so insert the node there
+	if (old == 0) {
 
-        if(current->isWide){
-            if (current->wide[position].compare_exchange_weak(old, newNode)) return true;
-            else return insert(value, hash, level, current, previous);
-        } else {
-            if (current->narrow[position].compare_exchange_weak(old, newNode)) return true;
-            else return insert(value, hash, level, current, previous);
-        }
+		AnyNode* newNode = new AnyNode;
+		newNode->snode.hash = hash;
+		newNode->snode.value = value;
+		newNode->nodeType = SNODE;
 
-    }
-
-    // Check if the position is occupied by an ANode
-    else if (old->nodeType == ANODE) {
-        ANode* oldANode = &old->anode;
-        return insert(value, hash, level + 4, oldANode, current); // May break everything, needs testing
-    }
-
-    // If the posistion is occupied by an SNode
-    else if (old->nodeType == SNODE) {
-        Txn txn = old->snode.txn;
-
-        if (txn == NoTxn) {
-            if (old->snode.value == value) {
-
-                AnyNode* newNode = new AnyNode;
-                newNode->snode.hash = hash;
-                newNode->snode.value = value;
-                newNode->nodeType = SNODE;
-                
-                if (newNode->snode.txn.compare_exchange_weak(txn, txn)){ // Making sure NoTxn
-                    current->wide[position].compare_exchange_weak(old, newNode);
-                    return true;
-                }
-                else {
-                    return insert(value, hash, level, current, previous);
-                }
-            } else if (!current->isWide) {
-                int previousPos = (hash >> (level - 4)) & ((previous->isWide ? 16 : 4) - 1);
-
-                AnyNode* newNode = new AnyNode;
-                newNode->enode.parentPos = previousPos;
-                newNode->enode.hash = hash;
-                newNode->enode.level = level;
-                newNode->enode.parent = previous;
-                newNode->nodeType = ENODE;
-
-                // AnyNode* parentANode = previous->wide[previousPos];
-                // if (previous->wide[previousPos].compare_exchange_weak(&parentANode->anode, newNode)) {
-
-                // }
-
-
-            } else {
-                AnyNode* newNode = new AnyNode;
-                newNode->anode.level = level + 4;
-                newNode->nodeType = ANODE;
-
-                AnyNode* temp;
-
-                // Insert previous snode into new anode
-                AnyNode* snode1 = new AnyNode;
-                snode1->snode.hash = old->snode.hash;
-                snode1->snode.value = old->snode.value;
-                snode1->nodeType = SNODE;
-                newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode1);
-
-                // Insert new snode into new anode
-                AnyNode* snode2 = new AnyNode;
-                snode2->snode.hash = hash;
-                snode2->snode.value = value;
-                snode2->nodeType = SNODE;
-                newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode2);
-
-                // int pos1 = (snode1->snode.hash >> (level + 4)) & (4 - 1);
-                // int pos2 = (snode2->snode.hash >> (level + 4)) & (4 - 1);
-                // std::cout << pos1 << " and " << pos2 << std::endl;
-
-                if (old->snode.txn.compare_exchange_weak(txn, txn)) {
-                    if (current->isWide) {
-                        current->wide[position].compare_exchange_weak(old, newNode);
-                    } else {
-                        current->narrow[position].compare_exchange_weak(old, newNode);
-                    }
-                    return true;
-                } else {
-                    return insert(value, hash, level, current, previous);
-                }
+		if (current->anode.isWide) {
+			if ( current->anode.wide[position].compare_exchange_weak(old, newNode)){
+               std::cout << "performing an insert on '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
+                return true; 
             }
-        } 
-        // SNode is frozen
-        else if (txn == FSNode) {
-            return false;
-        }
-        else { // Otherwise help finish the operation that another thread is performing and try again
-            return insert(value, hash, level, current, previous);
-        }
-    }
+			else return insert(value, hash, level, current, previous);
+		}
+		else {
+			if (current->anode.narrow[position].compare_exchange_weak(old, newNode)){
+                std::cout << "performing an insert on '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
+                return true;
+            }
+			else return insert(value, hash, level, current, previous);
+		}
 
-    // Check if the position is occupied an ENode
+	}
+
+	// Check if the position is occupied by an ANode
+	else if (old->nodeType == ANODE) {
+		//ANode* oldANode = &old->anode;
+		return insert(value, hash, level + 4, old, current); // May break everything, needs testing
+	}
+
+	// If the posistion is occupied by an SNode
+	else if (old->nodeType == SNODE) {
+		Txn txn = old->txn;
+
+		if (txn == NoTxn) {
+			if (old->snode.value == value) {
+
+				AnyNode* newNode = new AnyNode;
+				newNode->snode.hash = hash;
+				newNode->snode.value = value;
+				newNode->nodeType = SNODE;
+
+				if (newNode->txn.compare_exchange_weak(txn, txn)) { // Making sure NoTxn
+					current->anode.wide[position].compare_exchange_weak(old, newNode);
+					std::cout << "updating '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
+					return true;
+				}
+				else {
+					return insert(value, hash, level, current, previous);
+				}
+			}
+			else if (!current->anode.isWide) {
+				int previousPos = (hash >> (level - 4)) & ((previous->anode.isWide ? 16 : 4) - 1);
+
+				AnyNode* newNode = new AnyNode;
+				newNode->enode.parentPos = previousPos;
+				newNode->enode.hash = hash;
+				newNode->enode.level = level;
+				newNode->enode.parent = previous;
+				newNode->enode.narrow = current;
+				newNode->nodeType = ENODE;
+
+				AnyNode* parentANode = previous->anode.wide[previousPos];
+				if (previous->anode.wide[previousPos].compare_exchange_weak(parentANode, newNode)) {
+					std::cout << "swapped anode with enode at at pos " << previousPos <<  " and level " << (level-4) << std::endl;
+					completeExpansion(newNode);
+					AnyNode* wide = newNode->enode.parent->anode.wide[newNode->enode.parentPos];
+					return insert(value, hash, level, wide, previous);
+				}
+				else {
+					return insert(value, hash, level, current, previous);
+				}
+			}
+			else {
+				AnyNode* newNode = new AnyNode;
+				newNode->anode.level = level + 4;
+				newNode->nodeType = ANODE;
+
+				AnyNode* temp;
+
+				// Insert previous snode into new anode
+				AnyNode* snode1 = new AnyNode;
+				snode1->snode.hash = old->snode.hash;
+				snode1->snode.value = old->snode.value;
+				snode1->nodeType = SNODE;
+				newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode1);
+
+				// Insert new snode into new anode
+				AnyNode* snode2 = new AnyNode;
+				snode2->snode.hash = hash;
+				snode2->snode.value = value;
+				snode2->nodeType = SNODE;
+				newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode2);
+
+				if (old->txn.compare_exchange_weak(txn, txn)) {
+					if (current->anode.isWide) {
+						current->anode.wide[position].compare_exchange_weak(old, newNode);
+						std::cout << "inserted a new anode at pos " << position <<  " and level " << newNode->anode.level << std::endl;
+						std::cout << "\t" << old->snode.value << " at " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
+						std::cout << "\t" << value << " at " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
+					}
+					else {
+						current->anode.narrow[position].compare_exchange_weak(old, newNode);
+						std::cout << "inserted a new anode at pos " << position <<  " and level " << newNode->anode.level << std::endl;
+						std::cout << "\t" << old->snode.value << " at " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
+						std::cout << "\t" << value << " at " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
+					}
+					return true;
+				}
+				else {
+					return insert(value, hash, level, current, previous);
+				}
+			}
+		}
+		// SNode is frozen
+		else if (txn == FSNode) {
+			return false;
+		}
+		else { // Otherwise help finish the operation that another thread is performing and try again
+			return insert(value, hash, level, current, previous);
+		}
+	}
+
+	// Check if the position is occupied an ENode
+	else if (old->nodeType == ENODE) {
+		completeExpansion(old);
+	}
+
+	return false;
+}
+
+bool insert(std::string value) {
+	AnyNode* node = NULL;
+
+	if (!insert(value, std::hash<std::string>{}(value), 0, root, node))
+		insert(value);
+}
+
+void completeExpansion(AnyNode *& enode) {
+	
+	freeze(enode->enode.narrow);
+
+	copyToWide(enode->enode.narrow);
+
+	enode->enode.parent->anode.wide[enode->enode.parentPos].compare_exchange_weak(enode, enode->enode.narrow);
+	std::cout << "completed expanding anode at level " << enode->enode.level << std::endl;
+
+}
+
+void copyToWide(AnyNode *& node) {
+
+	int pos;
+	AnyNode* temp = new AnyNode;
+
+	for (int i = 0; i < 4; i++) {
+		AnyNode* curr = node->anode.narrow[i];
+		Txn txn = curr->txn;
+		if (curr != 0 && txn != FVNode) {
+			switch (curr->nodeType) {
+			case SNODE:
+				// recalculate position and insert to wide
+				pos = (curr->snode.hash >> (node->anode.level)) & (16 - 1);
+				temp = node->anode.wide[pos];
+				node->anode.wide[pos].compare_exchange_weak(temp, curr);
+				break;
+			case ANODE:
+				std::cout << "anode found in copy..uh oh" << std::endl;
+				break; // hmm
+			}
+
+		}
+	}
+
+	node->anode.isWide = true;
+	std::cout << "\nPrinting new expanded node!!!!" << std::endl;
+	printTree(&node->anode);
+}
+
+void freeze(AnyNode *& current) {
+	int i = 0;
+	int length = ((current->anode.isWide) ? 16 : 4);
+
+	while (i < length) {
+		AnyNode* node = (current->anode.isWide ? current->anode.wide[i] : current->anode.narrow[i]);
+		
+		if (node == 0) {
+			AnyNode* initNode = new AnyNode;
+
+			if (current->anode.isWide) {
+				current->anode.wide[i].compare_exchange_weak(node, initNode);
+			} else{
+				current->anode.narrow[i].compare_exchange_weak(node, initNode);
+			}
+
+			node = (current->anode.isWide ? current->anode.wide[i] : current->anode.narrow[i]);
+
+			Txn oldTxn = node->txn;
+			if (!node->txn.compare_exchange_weak(oldTxn, FVNode))
+			i--;
+		}
+		else if (node->nodeType == SNODE) {
+			Txn oldTxn = node->txn;
+			if (oldTxn == NoTxn) {
+				if (!node->txn.compare_exchange_weak(oldTxn, FSNode)) i--;
+			}
+			else if (oldTxn != FSNode) {
+				Txn oldTxn = node->txn;
+				// commit the pending changes ?
+				i--;
+			}
+		}
+		else if (node->nodeType == ANODE) {
+			AnyNode* newNode;
+			newNode->nodeType = FNODE;
+			newNode->fnode.frozen = node;
+			if (current->anode.isWide) {
+				current->anode.wide[i].compare_exchange_weak(node, newNode);
+			}
+		}
+		else if (node->nodeType == FNODE) {
+			freeze(node->fnode.frozen);
+		}
+		else if (node->nodeType == ENODE) {
+			completeExpansion(node);
+			i--;
+		}
+		i++;
+	}
+}
+
+std::string lookup(std::size_t hash, int level, AnyNode *& current) {
+    
+    int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
+
+    AnyNode* old = (current->anode.isWide ? current->anode.wide[position] : current->anode.narrow[position]);
+
+    Txn txn;
+    if (old != 0) txn = old->txn;
+    
+    if (old == 0 || txn == FVNode) {
+        return "";
+    }
+    else if (old->nodeType == ANODE) {
+        return lookup(hash, level + 4, old);
+    }
+    else if (old->nodeType == SNODE) {
+        if (old->snode.hash == hash) {
+            return old->snode.value;
+        }
+        else return "";
+    }
     else if (old->nodeType == ENODE) {
-        // Complete expansion
-
+        AnyNode* an = old->enode.narrow;
+        return lookup(hash, level + 4, an);
     }
-
-    return false;
+    else if (old->nodeType == FNODE) {
+        return lookup(hash, level + 4, old->fnode.frozen);
+    }
 }
 
-bool insert(std::string value){
-    ANode* node = NULL;
-
-    if ( !insert(value, std::hash<std::string>{}(value), 0, root, node) )
-        insert(value);
-}
-
-void completeExpansion(ENode *& en) {
-    // ANode wide = ANode();
-    // copy values from narrow to wide
-
-    // CAS on en.wide, null, new wide ANode
-
-    // CAS new wide anode where narrow anode was before
-}
-
-void freeze(ANode *& current) {
-    // int i  = 0;
-    // int length = ((current->isWide) ? 16 : 4);
-
-    // while (i < length) {
-        
-    // }
-}
-
-bool search(ANode root, std::string key) {
-
+std::string lookup(std::string value) {
+	return lookup(std::hash<std::string>{}(value), 0, root);
 }
 
 void printTree(ANode* anode) {
 
-    int length = (anode->isWide ? 16 : 4);
+	int length = (anode->isWide ? 16 : 4);
 
-    for(int i = 0; i < length; i++) {
+	for (int i = 0; i < length; i++) {
 
-        AnyNode* node;
-        if (anode->isWide) {node = anode->wide[i];} 
-        else node = anode->narrow[i];
+		AnyNode* node;
+		if (anode->isWide) { node = anode->wide[i]; }
+		else node = anode->narrow[i];
 
-        if(node != 0){
-            switch(node->nodeType) {
-                case SNODE:
-                    std::cout << node->snode.value << " at location " << i << std::endl;
-                    break;
-                case ANODE:
-                    std::cout << "Traverse anode at " << i << std::endl;
-                    printTree(&node->anode);
-                    break;
-            }
-        }
-    }
+		if (node != 0) {
+			switch (node->nodeType) {
+			case SNODE:
+				std::cout << node->snode.value << " at location " << i << std::endl;
+				break;
+			case ANODE:
+				std::cout << "Traverse anode at " << i << std::endl;
+				printTree(&node->anode);
+				std::cout << "End traversal anode at " << i << std::endl;
+				break;
+			}
+		}
+	}
 }
 
 int main() {
-    std::string values[] = {"melissa", "emily", "ashton", "rebeca", "damian", "victor", "tyler", "pichi", "pom", "neo", "precious"};
-    int n = sizeof(values) / sizeof(values[0]);
+	// 45 words
+	std::string values[] = { "melissa", "emily", "ashton", "rebeca", "damian", "victor", "tyler", "pichi", "pom", "neo", "precious", "martha", "margarita", "augustine", "andrew", "andy", "aimie", "elyse", "kaylene", "josie", "mickey", "minnie", "howl", "sophie", "calcifer", "donald", "sora", "riku", "kairi", "axel", "cloud", "zach", "purple", "freddy", "jimmy", "hula", "sushi"};// "nori", "ramen", "aladin", "jasmine", "genie", "poca", "john", "smith" };
+	int n = sizeof(values) / sizeof(values[0]);
 
-    root = new ANode;
-    root->isWide = true;
+	root = new AnyNode;
+	root->anode.isWide = true;
 
-    for(int i = 0; i < n; i++) {
-        //insert(std::rand());
-        insert(values[i]);
-    }
-
-    ANode* tempRoot = root;
+	for (int i = 0; i < n; i++) {
+		insert(values[i]);
+	}
+   
+    ANode* tempRoot = &root->anode;
+    std::cout << "\n\nTree Print:" << std::endl;
     printTree(tempRoot);
 
-    return 0;
+    std::cout << "\n\nLookup Print:" << std::endl;
+    for(int i = 0; i < n; i++) {
+        std::string value = lookup(values[i]);
+        if (value != "") std::cout << value << std::endl;
+    }
+
+	return 0;
 }
