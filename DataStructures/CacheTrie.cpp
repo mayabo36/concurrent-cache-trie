@@ -43,7 +43,7 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 		newNode->nodeType = SNODE;
 
 		if (current->anode.isWide) {
-			if (current->anode.wide[position].compare_exchange_weak(old, newNode)){
+			if ( current->anode.wide[position].compare_exchange_weak(old, newNode)){
                 std::cout << "performing an insert on '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
                 return true;
             }
@@ -174,6 +174,7 @@ bool insert(std::string value) {
 }
 
 void completeExpansion(AnyNode *& enode) {
+	
 	freeze(enode->enode.narrow);
 
 	copyToWide(enode->enode.narrow);
@@ -215,10 +216,21 @@ void freeze(AnyNode *& current) {
 
 	while (i < length) {
 		AnyNode* node = (current->anode.isWide ? current->anode.wide[i] : current->anode.narrow[i]);
-
+		
 		if (node == 0) {
+			AnyNode* initNode = new AnyNode;
+
+			if (current->anode.isWide) {
+				current->anode.wide[i].compare_exchange_weak(node, initNode);
+			} else{
+				current->anode.narrow[i].compare_exchange_weak(node, initNode);
+			}
+
+			node = (current->anode.isWide ? current->anode.wide[i] : current->anode.narrow[i]);
+
 			Txn oldTxn = node->txn;
-			if (!node->txn.compare_exchange_weak(oldTxn, FVNode)) i--;
+			if (!node->txn.compare_exchange_weak(oldTxn, FVNode))
+			i--;
 		}
 		else if (node->nodeType == SNODE) {
 			Txn oldTxn = node->txn;
