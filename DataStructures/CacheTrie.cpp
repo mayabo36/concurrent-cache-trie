@@ -308,24 +308,10 @@ int main() {
 	for (int i = 0; i < n; i++) {
 		insert(values[i]);
 	}
-
-	ANode* tempRoot = &root->anode;
-	std::cout << "\n\nTree Print:" << std::endl;
-	printTree(tempRoot);
-	std::cout << "\n\n" << std::endl;
-
-	lookup("ashton");
-
-    for(int i = 0; i < n; i++) {
-        insert(values[i]);
-    }
-    
+   
     ANode* tempRoot = &root->anode;
     std::cout << "\n\nTree Print:" << std::endl;
     printTree(tempRoot);
-    std::cout << "\n\n" << std::endl;
-
-    lookup("ashton");
 
     std::cout << "\n\nLookup Print:" << std::endl;
     for(int i = 0; i < n; i++) {
