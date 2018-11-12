@@ -3,7 +3,7 @@
 #include <iostream>
 
 int main() {
-    CacheTrie* ctrie = new CacheTrie;
+    CacheTrie* ctrie = new CacheTrie(2);
 	
 	std::thread t0(&CacheTrie::testInsert, std::ref(ctrie));
 	std::thread t1(&CacheTrie::testInsert, std::ref(ctrie));
@@ -17,7 +17,7 @@ int main() {
 
     std::cout << "\n\nLookup Print:" << std::endl;
 
-	// SEG FAULTS at 
+	// SEG FAULTS bigger numbers 
     for(int i = 1; i < 251; i++) {
         int value = ctrie->lookup(i);
         if (value != 0) std::cout << value << std::endl;
