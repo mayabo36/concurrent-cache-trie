@@ -30,8 +30,6 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 
 	int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
 
-	std::cout << "performing an insert on '" << value << "'" << "at pos " << position << std::endl;
-
 	AnyNode* old;
 	if (current->anode.isWide) old = current->anode.wide[position];
 	else old = current->anode.narrow[position];
@@ -45,11 +43,17 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 		newNode->nodeType = SNODE;
 
 		if (current->anode.isWide) {
-			if (current->anode.wide[position].compare_exchange_weak(old, newNode)) return true;
+			if (current->anode.wide[position].compare_exchange_weak(old, newNode)){
+                std::cout << "performing an insert on '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
+                return true;
+            }
 			else return insert(value, hash, level, current, previous);
 		}
 		else {
-			if (current->anode.narrow[position].compare_exchange_weak(old, newNode)) return true;
+			if (current->anode.narrow[position].compare_exchange_weak(old, newNode)){
+                std::cout << "performing an insert on '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
+                return true;
+            }
 			else return insert(value, hash, level, current, previous);
 		}
 
@@ -75,6 +79,7 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 
 				if (newNode->txn.compare_exchange_weak(txn, txn)) { // Making sure NoTxn
 					current->anode.wide[position].compare_exchange_weak(old, newNode);
+					std::cout << "updating '" << value << "'" << "at pos " << position <<  " and level " << level << std::endl;
 					return true;
 				}
 				else {
@@ -94,6 +99,7 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 
 				AnyNode* parentANode = previous->anode.wide[previousPos];
 				if (previous->anode.wide[previousPos].compare_exchange_weak(parentANode, newNode)) {
+					std::cout << "swapped anode with enode at at pos " << previousPos <<  " and level " << (level-4) << std::endl;
 					completeExpansion(newNode);
 					AnyNode* wide = newNode->enode.parent->anode.wide[newNode->enode.parentPos];
 					return insert(value, hash, level, wide, previous);
@@ -123,15 +129,18 @@ bool insert(std::string value, std::size_t hash, int level, AnyNode *& current, 
 				snode2->nodeType = SNODE;
 				newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode2);
 
-				std::cout << old->snode.value << " at " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
-				std::cout << value << " at " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
-
 				if (old->txn.compare_exchange_weak(txn, txn)) {
 					if (current->anode.isWide) {
 						current->anode.wide[position].compare_exchange_weak(old, newNode);
+						std::cout << "inserted a new anode at pos " << position <<  " and level " << newNode->anode.level << std::endl;
+						std::cout << "\t" << old->snode.value << " at " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
+						std::cout << "\t" << value << " at " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
 					}
 					else {
 						current->anode.narrow[position].compare_exchange_weak(old, newNode);
+						std::cout << "inserted a new anode at pos " << position <<  " and level " << newNode->anode.level << std::endl;
+						std::cout << "\t" << old->snode.value << " at " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
+						std::cout << "\t" << value << " at " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << std::endl;
 					}
 					return true;
 				}
@@ -170,6 +179,7 @@ void completeExpansion(AnyNode *& enode) {
 	copyToWide(enode->enode.narrow);
 
 	enode->enode.parent->anode.wide[enode->enode.parentPos].compare_exchange_weak(enode, enode->enode.narrow);
+	std::cout << "completed expanding anode at level " << enode->enode.level << std::endl;
 
 }
 
