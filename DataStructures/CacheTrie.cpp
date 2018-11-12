@@ -236,11 +236,14 @@ void freeze(AnyNode *& current) {
 }
 
 std::string lookup(std::size_t hash, int level, AnyNode *& current) {
+    
     int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
 
     AnyNode* old = (current->anode.isWide ? current->anode.wide[position] : current->anode.narrow[position]);
-    Txn txn = old->txn;
 
+    Txn txn;
+    if (old != 0) txn = old->txn;
+    
     if (old == 0 || txn == FVNode) {
         return "";
     }
@@ -304,8 +307,11 @@ int main() {
     ANode* tempRoot = &root->anode;
     std::cout << "\n\nTree Print:" << std::endl;
     printTree(tempRoot);
+    std::cout << "\n\n" << std::endl;
 
-    std::cout << "\n\Lookup Print:" << std::endl;
+    lookup("ashton");
+
+    std::cout << "\n\nLookup Print:" << std::endl;
     for(int i = 0; i < n; i++) {
         std::string value = lookup(values[i]);
         if (value != "") std::cout << value << std::endl;
