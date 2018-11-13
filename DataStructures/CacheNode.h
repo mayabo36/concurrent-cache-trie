@@ -1,5 +1,3 @@
-#include "../Nodes/AnyNode.h"
-
 #ifndef CACHENODE_H_GUARD
 #define CACHENODE_H_GUARD
 
@@ -8,8 +6,8 @@
 
 struct CacheNode {
 
-    int misses[];
-    AnyNode* parent[];
+    int* misses;
+    struct AnyNode* parent;
 
     CacheNode();
 };

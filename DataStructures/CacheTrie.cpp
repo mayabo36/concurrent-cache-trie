@@ -13,14 +13,18 @@
 #include "../Nodes/AnyNode.h"
 #include "../Nodes/SNode.h"
 
-CacheTrie::CacheTrie() {
+CacheTrie::CacheTrie(int num_threads) {
 
 	// instantiate root node to be a wide [16] array of anynodes
 	CacheTrie::root = new AnyNode;
 	root->anode.isWide = true;
 	root->nodeType = ANODE;
 
-	//
+	// Instantiate the cache head
+	CacheTrie::cacheHead = NULL;
+
+	CacheTrie::num_threads = num_threads;
+	CacheTrie::max_misses = 2048;
 }
 
 // Key is the word being inserted
@@ -302,6 +306,21 @@ int CacheTrie::lookup(int value) {
 	return lookup(std::hash<int>{}(value), 0, root);
 }
 
+AnyNode** CacheTrie::createCache(int level, AnyNode* parent []) {
+	AnyNode* cache [1 + (1 << level)];
+	int misses [num_threads]; // num_threads * THROUGHPUT_FACTOR ??
+
+	AnyNode* newCacheHead = new AnyNode;
+	newCacheHead->nodeType = CACHENODE;
+	newCacheHead->cachenode.misses = misses;
+	newCacheHead->cachenode.parent = NULL;
+
+	cache[0] = newCacheHead;
+
+	AnyNode** cachePtr = cache;
+	return cachePtr;
+}
+
 void CacheTrie::printTree(ANode* anode) {
 
 	int length = (anode->isWide ? 16 : 4);
@@ -323,6 +342,46 @@ void CacheTrie::printTree(ANode* anode) {
 				std::cout << "End traversal anode at " << i << std::endl;
 				break;
 			}
+		}
+	}
+}
+
+void CacheTrie::inhabit(AnyNode** cache, AnyNode* newValue, std::size_t hash, int cacheeLevel) {
+	if (cache == NULL) {
+		if (cacheeLevel >= 12) {
+			cache = createCache(8, NULL);
+			cacheHead = cache;
+			inhabit(cache, newValue, hash, cacheeLevel);
+		}
+	}
+	else {
+		int length = sizeof cache/sizeof cache[0];
+		int cacheLevel = length - 1; // countTrailingZeros(length - 1)
+
+		if (cacheLevel == cacheeLevel) {
+			int position = 1 + (hash & (length - 2));
+			cache[position] = newValue;
+		}
+	}
+}
+
+void CacheTrie::recordCacheMiss(int thread_id) {
+	AnyNode** cache = cacheHead;
+
+	if (cache != NULL) {
+		CacheNode cn = cache[0]->cachenode;
+		int missLength = sizeof cn.misses / sizeof cn.misses[0];
+		int counterId = thread_id % missLength;
+		
+		int count = cn.misses[counterId];
+		
+		if (count > max_misses) {
+			cn.misses[counterId] = 0;
+			//sampleAndAdjustCache(cache);
+		}
+		else {
+			cn.misses[counterId];
+			count++;
 		}
 	}
 }
