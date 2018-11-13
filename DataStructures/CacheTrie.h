@@ -22,12 +22,14 @@ struct CacheTrie {
     void copyToWide(AnyNode *& node);
     void freeze(AnyNode *& current);
     int lookup(std::size_t hash, int level, AnyNode *& current);
+    int fastLookup(int value);
     int lookup(int value);
     void printTree(ANode* anode);
     void testInsert();
     AnyNode** createCache(int level, AnyNode* parent []);
     void inhabit(AnyNode** cache, AnyNode* newValue, std::size_t hash, int cacheeLevel);
     void recordCacheMiss(int thread_id);
+
 };
 
 #endif
