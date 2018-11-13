@@ -6,8 +6,8 @@
 
 struct CacheNode {
 
-    int misses[];
-    struct AnyNode* parent[];
+    int* misses;
+    struct AnyNode* parent;
 
     CacheNode();
 };
