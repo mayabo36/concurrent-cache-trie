@@ -1,29 +1,42 @@
 #include "CacheTrie.h"
-#include <thread>
+#include <pthread.h>
 #include <iostream>
+#include <functional>
+#include <cstdlib>
+
+void *print_message(void* arg) {
+	CacheTrie* ctrie = static_cast<CacheTrie *>(arg);
+	ctrie->testInsert();
+	return nullptr;
+	//std::cout << "test" << std::endl;
+}
 
 int main() {
-    CacheTrie* ctrie = new CacheTrie(2);
+	CacheTrie* ctrie = new CacheTrie();
+ 	int rs;
 	
-	std::thread t0(&CacheTrie::testInsert, std::ref(ctrie));
-	std::thread t1(&CacheTrie::testInsert, std::ref(ctrie));
+	pthread_t t0; //(&CacheTrie::testInsert, std::ref(ctrie));
+	pthread_t t1; //(&CacheTrie::testInsert, std::ref(ctrie));
 
-	t0.join();
-	t1.join();
+	pthread_create(&t0, NULL, print_message, ctrie);
 
-    ANode* tempRoot = &ctrie->root->anode;
-    std::cout << "\n\nTree Print:" << std::endl;
-    ctrie->printTree(tempRoot);
+	void* status;
 
-    std::cout << "\n\nLookup Print:" << std::endl;
+	pthread_join(t0, &status);
+
+
+	ANode* tempRoot = &ctrie->root->anode;
+	std::cout << "\n\nTree Print:" << std::endl;
+	ctrie->printTree(tempRoot);
+
+	std::cout << "\n\nLookup Print:" << std::endl;
 
 	// SEG FAULTS bigger numbers 
-    for(int i = 1; i < 251; i++) {
-        int value = ctrie->lookup(i);
-        if (value != 0) std::cout << value << std::endl;
-    }
+	for(int i = 1; i < 251; i++) {
+		int value = ctrie->lookup(i);
+		if (value != 0) std::cout << value << std::endl;
+	}
 
 	std::cout << "Max level reached: " << ctrie->max_level << std::endl;
-
 	return 0;
 }
