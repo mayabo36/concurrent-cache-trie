@@ -22,7 +22,6 @@ struct CacheTrie {
     void copyToWide(AnyNode *& node);
     void freeze(AnyNode *& current);
     int lookup(std::size_t hash, int level, AnyNode *& current);
-    int lookup(std::size_t hash, int level, AnyNode *& current, AnyNode *& lastCachee, int cacheLevel);
     int fastLookup(int value);
     int lookup(int value);
     void printTree(ANode* anode);
