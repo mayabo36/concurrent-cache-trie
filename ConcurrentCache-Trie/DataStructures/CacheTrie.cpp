@@ -13,6 +13,15 @@
 #include "../Nodes/AnyNode.h"
 #include "../Nodes/SNode.h"
 
+
+// TODOS
+// 1. implement lookup with cache (wed)
+// 2. test.... (wed/sunday)
+// 3. stm version (sunday/monday)
+// 4. implement cache adjust
+// 5. debug insert past level 8
+
+
 CacheTrie::CacheTrie(int num_threads) {
 
 	// instantiate root node to be a wide [16] array of anynodes
@@ -304,6 +313,96 @@ int CacheTrie::lookup(std::size_t hash, int level, AnyNode *& current) {
 
 int CacheTrie::lookup(int value) {
 	return lookup(std::hash<int>{}(value), 0, root);
+}
+
+int CacheTrie::lookup(std::size_t hash, int level, AnyNode *& current, AnyNode *& lastCachee, int cacheLevel) {
+    
+    if (level == cacheLevel) {
+		inhabit(cacheHead, current, hash, level);
+	}
+
+	int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
+
+    AnyNode* old = (current->anode.isWide ? current->anode.wide[position] : current->anode.narrow[position]);
+
+    Txn txn;
+    if (old != 0) txn = old->txn;
+    
+    if (old == 0 || txn == FVNode) {
+        return 0;
+    }
+    else if (old->nodeType == ANODE) {
+        return lookup(hash, level + 4, old);
+    }
+    else if (old->nodeType == SNODE) {
+		if ((level >= cacheLevel) && (level <= cacheLevel + 4)) {
+			//recordCacheMiss();
+		}
+		if (level + 4 == cacheLevel) {
+			inhabit(cacheHead, old, hash, level + 4);
+		}
+        if (old->snode.hash == hash) {
+            return old->snode.value;
+        }
+        else return 0;
+    }
+    else if (old->nodeType == ENODE) {
+        AnyNode* an = old->enode.narrow;
+        return lookup(hash, level + 4, an);
+    }
+    else if (old->nodeType == FNODE) {
+        return lookup(hash, level + 4, old->fnode.frozen);
+    }
+}
+
+
+int CacheTrie::fastLookup(int value) {
+	std::size_t hash = std::hash<int>{}(value);
+	AnyNode** cache = cacheHead;
+
+	// if we dont have a cache, perform a slow lookup
+	if (cache == NULL) {
+		return lookup(hash, 0, root); // include cache level later
+	}
+
+	int cacheLength = sizeof cache/sizeof cache[0];
+	int topLevel = cacheLength - 1; // countTrailingZeros(cache.length - 1)
+
+	while (cache != NULL) {
+		int position = 1 + (hash & (cacheLength - 2));
+		AnyNode* cachee = cache[position];
+		int level = cacheLength - 1; // countTrailingZeros(cache.length - 1)
+
+		if (cachee->nodeType == SNODE) {
+			Txn txn = cachee->txn; // old.txn?
+
+			if (txn == NoTxn) {
+				if (cachee->snode.value == value) return cachee->snode.value;
+				else return 0;
+			}
+		}
+		else if (cachee->nodeType == ANODE) {
+			int cacheeLength = sizeof cachee/sizeof cachee[0];
+			int cachePosition = (hash >> level) & (cacheeLength - 1);
+
+			AnyNode* old = &cachee[cachePosition]; // BREAK HERE??????????
+
+			// Maybe do this if (old != 0)
+			Txn txn = old->txn;
+
+			if (txn == FVNode || old->nodeType == FNODE) continue;
+
+			if (old->nodeType == SNODE) {
+				if (txn == FSNode) continue;
+			}
+
+			return lookup(hash, level, cachee); // include cache level later
+		}
+
+		cache = &(cache[0]->cachenode).parent;
+	}
+
+	return lookup(hash, 0, root);
 }
 
 AnyNode** CacheTrie::createCache(int level, AnyNode* parent []) {

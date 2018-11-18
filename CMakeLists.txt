@@ -32,23 +32,23 @@ LINK_DIRECTORIES(
 #-------------------------------------------------------------------------------
 
 SET(HEADERS
-    Nodes/ANode.h
-    Nodes/AnyNode.h
-    Nodes/SNode.h
-    Nodes/ENode.h
-    Nodes/FNode.h
-    DataStructures/CacheTrie.h
-    DataStructures/CacheNode.h
+    ConcurrentCache-Trie/Nodes/ANode.h
+    ConcurrentCache-Trie/Nodes/AnyNode.h
+    ConcurrentCache-Trie/Nodes/SNode.h
+    ConcurrentCache-Trie/Nodes/ENode.h
+    ConcurrentCache-Trie/Nodes/FNode.h
+    ConcurrentCache-Trie/DataStructures/CacheTrie.h
+    ConcurrentCache-Trie/DataStructures/CacheNode.h
 )
 
 SET(SOURCES
-    DataStructures/CacheNode.cpp
-    DataStructures/CacheTrie.cpp
-    Nodes/ANode.cpp
-    Nodes/AnyNode.cpp
-    Nodes/SNode.cpp
-    Nodes/ENode.cpp
-    Nodes/FNode.cpp
+    ConcurrentCache-Trie/DataStructures/CacheNode.cpp
+    ConcurrentCache-Trie/DataStructures/CacheTrie.cpp
+    ConcurrentCache-Trie/Nodes/ANode.cpp
+    ConcurrentCache-Trie/Nodes/AnyNode.cpp
+    ConcurrentCache-Trie/Nodes/SNode.cpp
+    ConcurrentCache-Trie/Nodes/ENode.cpp
+    ConcurrentCache-Trie/Nodes/FNode.cpp
     Testing/TestProgram.cpp
 )
 
