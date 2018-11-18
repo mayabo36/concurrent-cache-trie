@@ -1,4 +1,4 @@
-#include "CacheTrie.h"
+#include "ConcurrentCache-Trie/DataStructures/CacheTrie.h"
 #include <thread>
 #include <iostream>
 
@@ -19,7 +19,7 @@ int main() {
 
 	// SEG FAULTS bigger numbers 
     for(int i = 1; i < 251; i++) {
-        int value = ctrie->lookup(i);
+        int value = ctrie->fastLookup(i);
         if (value != 0) std::cout << value << std::endl;
     }
 

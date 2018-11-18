@@ -315,6 +315,47 @@ int CacheTrie::lookup(int value) {
 	return lookup(std::hash<int>{}(value), 0, root);
 }
 
+int CacheTrie::lookup(std::size_t hash, int level, AnyNode *& current, AnyNode *& lastCachee, int cacheLevel) {
+    
+    if (level == cacheLevel) {
+		inhabit(cacheHead, current, hash, level);
+	}
+
+	int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
+
+    AnyNode* old = (current->anode.isWide ? current->anode.wide[position] : current->anode.narrow[position]);
+
+    Txn txn;
+    if (old != 0) txn = old->txn;
+    
+    if (old == 0 || txn == FVNode) {
+        return 0;
+    }
+    else if (old->nodeType == ANODE) {
+        return lookup(hash, level + 4, old);
+    }
+    else if (old->nodeType == SNODE) {
+		if ((level >= cacheLevel) && (level <= cacheLevel + 4)) {
+			//recordCacheMiss();
+		}
+		if (level + 4 == cacheLevel) {
+			inhabit(cacheHead, old, hash, level + 4);
+		}
+        if (old->snode.hash == hash) {
+            return old->snode.value;
+        }
+        else return 0;
+    }
+    else if (old->nodeType == ENODE) {
+        AnyNode* an = old->enode.narrow;
+        return lookup(hash, level + 4, an);
+    }
+    else if (old->nodeType == FNODE) {
+        return lookup(hash, level + 4, old->fnode.frozen);
+    }
+}
+
+
 int CacheTrie::fastLookup(int value) {
 	std::size_t hash = std::hash<int>{}(value);
 	AnyNode** cache = cacheHead;
