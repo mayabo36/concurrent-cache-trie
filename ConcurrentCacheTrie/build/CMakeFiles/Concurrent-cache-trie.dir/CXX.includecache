@@ -1,4 +1,4 @@
-#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
 
 #IncludeRegexScan: ^.*$
 
@@ -46,13 +46,13 @@ cstdlib
 atomic
 -
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/DataStructures/CacheNode.cpp
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/DataStructures/CacheNode.cpp
 CacheNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/DataStructures/CacheNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/DataStructures/CacheNode.h
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/DataStructures/CacheNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/DataStructures/CacheNode.h
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/DataStructures/CacheTrie.cpp
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/DataStructures/CacheTrie.cpp
 cstddef
 -
 string
@@ -66,21 +66,21 @@ unistd.h
 atomic
 -
 CacheTrie.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/DataStructures/CacheTrie.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/DataStructures/CacheTrie.h
 ../Nodes/ANode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/ANode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/ANode.h
 ../Nodes/AnyNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/AnyNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/AnyNode.h
 ../Nodes/SNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/SNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/SNode.h
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/DataStructures/CacheTrie.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/DataStructures/CacheTrie.h
 ../Nodes/AnyNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/AnyNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/AnyNode.h
 atomic
 -
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/ANode.cpp
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/ANode.cpp
 iostream
 -
 typeinfo
@@ -90,17 +90,17 @@ string
 cstdlib
 -
 ANode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/ANode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/ANode.h
 SNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/SNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/SNode.h
 AnyNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/AnyNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/AnyNode.h
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/ANode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/ANode.h
 atomic
 -
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/AnyNode.cpp
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/AnyNode.cpp
 iostream
 -
 typeinfo
@@ -108,41 +108,41 @@ typeinfo
 string
 -
 ANode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/ANode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/ANode.h
 SNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/SNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/SNode.h
 AnyNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/AnyNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/AnyNode.h
 ../DataStructures/CacheNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/DataStructures/CacheNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/DataStructures/CacheNode.h
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/AnyNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/AnyNode.h
 ANode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/ANode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/ANode.h
 SNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/SNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/SNode.h
 ENode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/ENode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/ENode.h
 FNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/FNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/FNode.h
 ../DataStructures/CacheNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/DataStructures/CacheNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/DataStructures/CacheNode.h
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/ENode.cpp
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/ENode.cpp
 ENode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/ENode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/ENode.h
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/ENode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/ENode.h
 ANode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/ANode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/ANode.h
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/FNode.cpp
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/FNode.cpp
 FNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/FNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/FNode.h
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/FNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/FNode.h
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/SNode.cpp
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/SNode.cpp
 iostream
 -
 typeinfo
@@ -154,9 +154,9 @@ cstdlib
 atomic
 -
 SNode.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/SNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/SNode.h
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Nodes/SNode.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Nodes/SNode.h
 typeinfo
 -
 string
@@ -166,9 +166,9 @@ cstdlib
 atomic
 -
 
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Testing/TestProgram.cpp
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Testing/TestProgram.cpp
 CacheTrie.h
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/Testing/CacheTrie.h
+/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/Testing/CacheTrie.h
 pthread.h
 -
 iostream
