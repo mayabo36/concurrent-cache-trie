@@ -38,16 +38,16 @@ void* run_thread(void* i) {
     // each thread must be initialized before running transactions
     TM_THREAD_INIT();
 
-    // for(int i=0; i<NUM_TRANSACTIONS; i++) {
-    //     // mark the beginning of a transaction
-    //     TM_BEGIN(atomic) {
-    //         // add this memory location to the read set
-    //         int z = TM_READ(x);
-    //         // add this memory location to the write set
-    //         TM_WRITE(x, z+1);
-    //     }
-    //     TM_END; // mark the end of the transaction
-    // }
+     for(int i=0; i<NUM_TRANSACTIONS; i++) {
+         // mark the beginning of a transaction
+         TM_BEGIN(atomic) {
+             // add this memory location to the read set
+             int z = TM_READ(x);
+             // add this memory location to the write set
+             TM_WRITE(x, z+1);
+         }
+         TM_END; // mark the end of the transaction
+     }
 
     TM_THREAD_SHUTDOWN();
 }
