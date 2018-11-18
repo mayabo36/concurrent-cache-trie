@@ -1,3 +1,0 @@
-/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/build/CMakeFiles/edit_cache.dir
-/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/build/CMakeFiles/rebuild_cache.dir
-/home/mayabo36/concurrent-cache-trie/ConcurrentCacheTrie/build/CMakeFiles/Concurrent-cache-trie.dir
