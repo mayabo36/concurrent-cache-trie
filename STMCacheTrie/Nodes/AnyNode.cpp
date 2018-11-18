@@ -7,6 +7,7 @@
 #include "../DataStructures/CacheNode.h"
 
 AnyNode::AnyNode() {
+    AnyNode::txn = NoTxn;
     AnyNode::nodeType = NodeType::SNODE;
 }
 
