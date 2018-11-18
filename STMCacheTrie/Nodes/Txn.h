@@ -1,0 +1,1 @@
+enum Txn { NoTxn, FSNode, FVNode}
