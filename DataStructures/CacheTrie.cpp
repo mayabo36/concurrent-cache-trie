@@ -22,7 +22,7 @@
 // 5. debug insert past level 8
 
 
-CacheTrie::CacheTrie(int num_threads) {
+CacheTrie::CacheTrie() {
 
 	// instantiate root node to be a wide [16] array of anynodes
 	CacheTrie::root = new AnyNode;
@@ -32,7 +32,7 @@ CacheTrie::CacheTrie(int num_threads) {
 	// Instantiate the cache head
 	CacheTrie::cacheHead = NULL;
 
-	CacheTrie::num_threads = num_threads;
+	//CacheTrie::num_threads = num_threads;
 	CacheTrie::max_misses = 2048;
 }
 
@@ -182,7 +182,7 @@ bool CacheTrie::insert(int value) {
 
 }
 
-void CacheTrie::testInsert() {
+void *CacheTrie::testInsert(void) {
 
 	for (int i = 1; i < 251; i++) {
 		insert(i);

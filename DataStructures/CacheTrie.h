@@ -15,7 +15,7 @@ struct CacheTrie {
     int max_misses;
     std::atomic<int> max_level {0}; // update in complete expansion
 
-    CacheTrie(int num_threads);
+    CacheTrie();
     bool insert(int value, std::size_t hash, int level, AnyNode *& current, AnyNode *& previous);
     bool insert(int value);
     void completeExpansion(AnyNode *& enode);
@@ -25,7 +25,7 @@ struct CacheTrie {
     int fastLookup(int value);
     int lookup(int value);
     void printTree(ANode* anode);
-    void testInsert();
+    void* testInsert(void);
     AnyNode** createCache(int level, AnyNode* parent []);
     void inhabit(AnyNode** cache, AnyNode* newValue, std::size_t hash, int cacheeLevel);
     void recordCacheMiss(int thread_id);

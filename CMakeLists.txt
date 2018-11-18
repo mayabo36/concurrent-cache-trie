@@ -4,7 +4,7 @@ PROJECT(concurrent-cache-trie)
 # CMake configuration
 #-------------------------------------------------------------------------------
 
-    add_definitions(-std=c++11 -pthread)
+    add_definitions(-std=c++11 -lpthread)
 
 
 # Qt5 configuration
@@ -63,4 +63,5 @@ ADD_EXECUTABLE(
 
 TARGET_LINK_LIBRARIES(
     Concurrent-cache-trie
+    pthread
 )
