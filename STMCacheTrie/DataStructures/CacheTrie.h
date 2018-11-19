@@ -1,5 +1,4 @@
 #include "../Nodes/AnyNode.h"
-#include <atomic>
 
 #ifndef CACHETRIE_H_GUARD
 #define CACHETRIE_H_GUARD
@@ -13,7 +12,6 @@ struct CacheTrie {
     AnyNode** cacheHead;
     int num_threads;
     int max_misses;
-    std::atomic<int> max_level {0}; // update in complete expansion
 
     CacheTrie();
     bool insert(int value, std::size_t hash, int level, AnyNode *& current, AnyNode *& previous);

@@ -16,7 +16,7 @@ struct AnyNode {
 	FNode fnode;
 	CacheNode cachenode;
 	NodeType nodeType;
-	std::atomic<Txn> txn {NoTxn};
+	Txn txn;
 
 	AnyNode();
 	void sayHi();

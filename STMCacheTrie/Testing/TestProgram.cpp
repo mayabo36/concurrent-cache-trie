@@ -16,7 +16,7 @@ int main() {
  	int rs;
 	
 	pthread_t t0; //(&CacheTrie::testInsert, std::ref(ctrie));
-	pthread_t t1; //(&CacheTrie::testInsert, std::ref(ctrie));
+	//pthread_t t1; //(&CacheTrie::testInsert, std::ref(ctrie));
 
 	pthread_create(&t0, NULL, print_message, ctrie);
 
@@ -37,6 +37,5 @@ int main() {
 		if (value != 0) std::cout << value << std::endl;
 	}
 
-	std::cout << "Max level reached: " << ctrie->max_level << std::endl;
 	return 0;
 }
