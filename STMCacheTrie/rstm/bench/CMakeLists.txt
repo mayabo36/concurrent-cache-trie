@@ -19,6 +19,7 @@ include (AddTargetDefinitions)
 # executable, which is annoying, but there doesn't seem to be an easy way to fix
 # this (it's a CMake FAQ).
 set(
+  main
   benchmarks
   CounterBench
   TreeBench
