@@ -8,6 +8,7 @@
 
 AnyNode::AnyNode() {
     AnyNode::nodeType = NodeType::SNODE;
+    AnyNode::txn = NoTxn;
 }
 
 void AnyNode::sayHi() {
