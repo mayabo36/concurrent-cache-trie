@@ -2,8 +2,8 @@
 #include <iostream>
 #include <signal.h>
 #include <pthread.h>
-#include <../rstm/include/common/platform.hpp>
-#include </rstm/include/common/locks.hpp>
+#include <../include/common/platform.hpp>
+#include <../include/common/locks.hpp>
 #include "../include/api/api.hpp"
 using namespace std;
 
