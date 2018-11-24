@@ -14,12 +14,7 @@
 #include "../Nodes/SNode.h"
 
 
-// TODOS
-// 1. implement lookup with cache (wed)
-// 2. test.... (wed/sunday)
-// 3. stm version (sunday/monday)
-// 4. implement cache adjust
-// 5. debug insert past level 8
+bool DEBUG = false;
 
 
 CacheTrie::CacheTrie() {
@@ -47,6 +42,8 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 
 	int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
 
+	if (DEBUG) std::cout << "[0]attempting to insert " << value << " at " << position << " and level " << level << std::endl;
+
 	AnyNode* old;
 	if (current->anode.isWide) old = current->anode.wide[position];
 	else old = current->anode.narrow[position];
@@ -61,12 +58,14 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 
 		if (current->anode.isWide) {
 			if ( current->anode.wide[position].compare_exchange_weak(old, newNode)){
+				if (DEBUG) std::cout << "[1]inserting " << value << " at wide " << position << " and level " << level << "\n" << std::endl;
                 return true; 
             }
 			else return insert(value, hash, level, current, previous);
 		}
 		else {
 			if (current->anode.narrow[position].compare_exchange_weak(old, newNode)){
+				if (DEBUG) std::cout << "[2]inserting " << value << " at narrow " << position << " and level " << level << "\n" << std::endl;
                 return true;
             }
 			else return insert(value, hash, level, current, previous);
@@ -94,6 +93,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 
 				if (newNode->txn.compare_exchange_weak(txn, txn)) { // Making sure NoTxn
 					current->anode.wide[position].compare_exchange_weak(old, newNode);
+					if (DEBUG) std::cout << "[3]inserting " << value << " at wide " << position << " and level " << level << "\n" << std::endl;
 					return true;
 				}
 				else {
@@ -113,6 +113,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 
 				AnyNode* parentANode = previous->anode.wide[previousPos];
 				if (previous->anode.wide[previousPos].compare_exchange_weak(parentANode, newNode)) {
+					if (DEBUG) std::cout << "[4]inserting enode at wide " << previousPos << " and level " << (level - 4) << "\n" << std::endl;
 					completeExpansion(newNode);
 					AnyNode* wide = newNode->enode.parent->anode.wide[newNode->enode.parentPos];
 					return insert(value, hash, level, wide, previous);
@@ -134,6 +135,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				snode1->snode.value = old->snode.value;
 				snode1->nodeType = SNODE;
 				newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode1);
+				if (DEBUG) std::cout << "[5]inserting " << snode1->snode.value << " at narrow " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << " and level " << newNode->anode.level << "\n" << std::endl;
 
 				// Insert new snode into new anode
 				AnyNode* snode2 = new AnyNode;
@@ -141,13 +143,16 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				snode2->snode.value = value;
 				snode2->nodeType = SNODE;
 				newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode2);
+				if (DEBUG) std::cout << "[6]inserting " << snode2->snode.value << " at narrow " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << " and level " << newNode->anode.level << "\n" << std::endl;
 
 				if (old->txn.compare_exchange_weak(txn, txn)) {
 					if (current->anode.isWide) {
 						current->anode.wide[position].compare_exchange_weak(old, newNode);
+						if (DEBUG) std::cout << "[7]inserting anode at wide " << position << " and level " << level << "\n" << std::endl;
 					}
 					else {
 						current->anode.narrow[position].compare_exchange_weak(old, newNode);
+						if (DEBUG) std::cout << "[8]inserting anode at narrow " << position << " and level " << level << "\n" << std::endl;
 					}
 					return true;
 				}
@@ -184,7 +189,7 @@ bool CacheTrie::insert(int value) {
 
 void *CacheTrie::testInsert(void) {
 
-	for (int i = 1; i < 251; i++) {
+	for (int i = 1; i < 50000; i++) {
 		insert(i);
 	}
 }
@@ -217,6 +222,7 @@ void CacheTrie::copyToWide(AnyNode *& node) {
 				// Note: we need to change the txn value of the snode in the wide array to NoTxn after copying so other threads can modify it
 				curr->txn.compare_exchange_weak(txn, NoTxn);
 				node->anode.wide[pos].compare_exchange_weak(temp, curr);
+				if (DEBUG) std::cout << "[9]inserting " << curr->snode.value << " at wide " << pos << " and level " << node->anode.level << "\n" << std::endl;
 				break;
 			case ANODE:
 				std::cout << "anode found in copy..uh oh" << std::endl;

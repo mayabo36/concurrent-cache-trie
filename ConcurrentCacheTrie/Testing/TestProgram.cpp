@@ -32,11 +32,15 @@ int main() {
 	std::cout << "\n\nLookup Print:" << std::endl;
 
 	// SEG FAULTS bigger numbers 
-	for(int i = 1; i < 251; i++) {
+	int n = 0;
+	for(int i = 1; i < 50000; i++) {
 		int value = ctrie->lookup(i);
-		if (value != 0) std::cout << value << std::endl;
+		if (value != 0){
+			n++;
+			std::cout << value << std::endl;
+		} 
 	}
 
-	std::cout << "Max level reached: " << ctrie->max_level << std::endl;
+	std::cout << "Items successfully inserted/found: " << n << std::endl;
 	return 0;
 }

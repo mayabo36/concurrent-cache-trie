@@ -59,14 +59,14 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 		#endif
 			if (current->anode.isWide) {
 				if (current->anode.wide[position] == old){
-					if (DEBUG) std::cout << "[1]inserting " << value << " at wide " << position << " and level " << level << std::endl;
+					if (DEBUG) std::cout << "[1]inserting " << value << " at wide " << position << " and level " << level << "\n" << std::endl;
 					current->anode.wide[position] = newNode;
 					return true;
 				} 
 			}
 			else {
 				if (current->anode.narrow[position] == old) {
-					if (DEBUG) std::cout << "[2]inserting " << value << " at narrow " << position << " and level " << level << std::endl;
+					if (DEBUG) std::cout << "[2]inserting " << value << " at narrow " << position << " and level " << level << "\n" << std::endl;
 					current->anode.narrow[position] = newNode;
 					return true;
 				} 
@@ -117,7 +117,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				#endif					
 					if (newNode->txn == txn) {
 						if (current->anode.wide[position] == old){
-							if (DEBUG) std::cout << "[3]inserting " << value << " at wide " << position << " and level " << level << std::endl;
+							if (DEBUG) std::cout << "[3]inserting " << value << " at wide " << position << " and level " << level << "\n" << std::endl;
 							current->anode.wide[position] = newNode;
 							return true;
 						}
@@ -156,7 +156,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				__transaction_atomic {
 				#endif
 					if (previous->anode.wide[previousPos] == parentANode) {
-						if (DEBUG) std::cout << "[4]inserting enode at wide " << previousPos << " and level " << (level - 4) << std::endl;
+						if (DEBUG) std::cout << "[4]inserting enode at wide " << previousPos << " and level " << (level - 4) << "\n" << std::endl;
 						previous->anode.wide[previousPos] = newNode;
 						succ = true;
 					}
@@ -199,7 +199,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				__transaction_atomic {
 				#endif
 					if (newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp) {
-						if (DEBUG) std::cout << "[5]inserting " << snode1->snode.value << " at narrow " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << " and level " << newNode->anode.level << std::endl;
+						if (DEBUG) std::cout << "[5]inserting " << snode1->snode.value << " at narrow " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << " and level " << newNode->anode.level << "\n" << std::endl;
 						newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)] = snode1;
 					}
 				#ifdef _USE_TSX	
@@ -217,7 +217,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				__transaction_atomic {
 				#endif
 					if (newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp) { 
-						if (DEBUG) std::cout << "[6]inserting " << snode2->snode.value << " at narrow " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << " and level " << newNode->anode.level << std::endl;
+						if (DEBUG) std::cout << "[6]inserting " << snode2->snode.value << " at narrow " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << " and level " << newNode->anode.level << "\n" << std::endl;
 						newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)] = snode2;
 					}
 				#ifdef _USE_TSX	
@@ -230,11 +230,11 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				#endif
 					if (old->txn == txn) {
 						if (current->anode.isWide && current->anode.wide[position] == old){
-							if (DEBUG) std::cout << "[7]inserting anode at wide " << position << " and level " << level << std::endl;
+							if (DEBUG) std::cout << "[7]inserting anode at wide " << position << " and level " << level << "\n" << std::endl;
 							current->anode.wide[position] = newNode;
 						} 
 						else if (!current->anode.isWide && current->anode.narrow[position] == old){
-							if (DEBUG) std::cout << "[8]inserting anode at narrow " << position << " and level " << level << std::endl;
+							if (DEBUG) std::cout << "[8]inserting anode at narrow " << position << " and level " << level << "\n" << std::endl;
 							current->anode.narrow[position] = newNode;
 						} 
 						return true;
@@ -283,7 +283,7 @@ bool CacheTrie::insert(int value) {
 
 void *CacheTrie::testInsert(void) {
 
-	for (int i = 1; i < 250; i++) {
+	for (int i = 1; i < 50000; i++) {
 		insert(i);
 	}
 }
@@ -329,7 +329,10 @@ void CacheTrie::copyToWide(AnyNode *& node) {
 				__transaction_atomic {
 				#endif
 					if (curr->txn == txn) curr->txn = NoTxn;
-					if (node->anode.wide[pos] == temp) node->anode.wide[pos] = curr;
+					if (node->anode.wide[pos] == temp){
+						if (DEBUG) std::cout << "[9]inserting " << curr->snode.value << " at wide " << pos << " and level " << node->anode.level << "\n" << std::endl;
+						node->anode.wide[pos] = curr;
+					} 
 				#ifdef _USE_TSX
 				}
 				#endif
