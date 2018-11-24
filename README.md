@@ -1,19 +1,29 @@
-# concurrent-cache-trie 
+Concurrent Cache Trie Data Structure
+------------------------------------
+There are two versions of the data structure: a concurrent cache trie and a STM cache trie.
 
-currently does not compile.
-
-to test run the CacheTrie, go to the DataStructures folder and run the following command on a terminal:
-
-$ g++ CacheTrie.cpp -c -std=c++11
-$ ./a.exe
-
+To test the cache trie data structure follow the instructions below:
+Note: Requires *cmake*, *make*, and *gcc* to be installed.
 
 ----------
-(download cmake):
-1. create a folder called build in the root directory
-2. cd build
-3. run cmake .. (for rebeca: cmake.exe -G "MinGW Makefiles" -DCMAKE_SH="CMAKE_SH-NOTFOUND" ..)
-4. In terminal: "make" (should be inside build folder)
-5. Type: "./Concurrent-cache-trie"
+##### Concurrent Cache Trie
+1. Go to the `ConcurrentCacheTrie` folder
+1. Create a folder called `build`
+2. Go into the `build` folder
+3. In the terminal, run `cmake ..`
+4. Run `make`
+5. Execute the test program in the terminal with  `./Concurrent-cache-trie`
+
+##### STM Cache Trie
+1. Go to the `GCC_TM_CacheTrie` folder
+1. Create a folder called `build`
+2. Go into the `build` folder
+3. In the terminal, run `cmake ..`
+4. Run `make`
+5. Execute the test program in the terminal with  `./Concurrent-cache-trie`
+
+----------
+
+Note: For Windows using GitBash, cmake command is "cmake.exe -G "MinGW Makefiles" -DCMAKE_SH="CMAKE_SH-NOTFOUND" .."
 
 
