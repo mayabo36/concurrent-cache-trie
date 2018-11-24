@@ -16,7 +16,7 @@ int main() {
  	int rs;
 	
 	pthread_t t0; //(&CacheTrie::testInsert, std::ref(ctrie));
-	pthread_t t1; //(&CacheTrie::testInsert, std::ref(ctrie));
+	//pthread_t t1; //(&CacheTrie::testInsert, std::ref(ctrie));
 
 	pthread_create(&t0, NULL, print_message, ctrie);
 
@@ -35,12 +35,13 @@ int main() {
 	int n = 0;
 	for(int i = 1; i < 50000; i++) {
 		int value = ctrie->lookup(i);
-		if (value != 0){
+		if (value != 0) {
 			n++;
 			std::cout << value << std::endl;
 		} 
 	}
-
+	
 	std::cout << "Items successfully inserted/found: " << n << std::endl;
+
 	return 0;
 }
