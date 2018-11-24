@@ -34,12 +34,6 @@ CacheTrie::CacheTrie() {
 // Key is the word being inserted
 bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& current, AnyNode *& previous) {
 
-
-	// if (level > CacheTrie::max_level){
-	// 	int temp = max_level;
-	// 	max_level.compare_exchange_weak(temp, level);
-	// } 
-
 	int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
 
 	if (DEBUG) std::cout << "[0]attempting to insert " << value << " at " << position << " and level " << level << std::endl;
@@ -189,7 +183,7 @@ bool CacheTrie::insert(int value) {
 
 void CacheTrie::testInsert(int thread_id) {
 
-	for (int i = 1; i <= 250; i += thread_id) {
+	for (int i = 1; i <= 500; i += thread_id) {
 		insert(i);
 	}
 }
