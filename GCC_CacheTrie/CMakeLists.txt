@@ -4,7 +4,7 @@ PROJECT(concurrent-cache-trie)
 # CMake configuration
 #-------------------------------------------------------------------------------
 
-    add_definitions(-std=c++11 -lpthread)
+    add_definitions(-std=c++11 -lpthread -Wall -fgnu-tm -O3)
 
 
 # Qt5 configuration

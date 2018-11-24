@@ -59,18 +59,37 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 		newNode->snode.value = value;
 		newNode->nodeType = SNODE;
 
-		if (current->anode.isWide) {
-			if ( current->anode.wide[position].compare_exchange_weak(old, newNode)){
-                return true; 
-            }
-			else return insert(value, hash, level, current, previous);
+		bool succ = false;
+
+		__transaction_atomic {
+			if (current->anode.isWide) {
+				if (current->anode.wide[position] == old){
+					current->anode.wide[position] = newNode;
+					succ = true;
+				} 
+			}
+			else {
+				if (current->anode.narrow[position] == old) {
+					current->anode.narrow[position] = newNode;
+					succ = true;
+				} 
+			}
 		}
-		else {
-			if (current->anode.narrow[position].compare_exchange_weak(old, newNode)){
-                return true;
-            }
-			else return insert(value, hash, level, current, previous);
-		}
+
+		if (!succ) return insert (value, hash, level, current, previous);
+
+		// if (current->anode.isWide) {
+		// 	if ( current->anode.wide[position].compare_exchange_weak(old, newNode)){
+        //         return true; 
+        //     }
+		// 	else return insert(value, hash, level, current, previous);
+		// }
+		// else {
+		// 	if (current->anode.narrow[position].compare_exchange_weak(old, newNode)){
+        //         return true;
+        //     }
+		// 	else return insert(value, hash, level, current, previous);
+		// }
 
 	}
 
@@ -92,13 +111,27 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				newNode->snode.value = value;
 				newNode->nodeType = SNODE;
 
-				if (newNode->txn.compare_exchange_weak(txn, txn)) { // Making sure NoTxn
-					current->anode.wide[position].compare_exchange_weak(old, newNode);
-					return true;
+				bool succ = false;
+
+				__transaction_atomic {
+					if (newNode->txn == txn) {
+						if (current->anode.wide[position] == old){
+							current->anode.wide[position] = newNode;
+							return true;
+						}
+						succ = true;
+					}
 				}
-				else {
-					return insert(value, hash, level, current, previous);
-				}
+
+				if (!succ) return insert(value, hash, level, current, previous);
+
+				// if (newNode->txn.compare_exchange_weak(txn, txn)) { // Making sure NoTxn
+				// 	current->anode.wide[position].compare_exchange_weak(old, newNode);
+				// 	return true;
+				// }
+				// else {
+				// 	return insert(value, hash, level, current, previous);
+				// }
 			}
 			else if (!current->anode.isWide) {
 				int previousPos = (hash >> (level - 4)) & ((previous->anode.isWide ? 16 : 4) - 1);
@@ -112,7 +145,17 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				newNode->nodeType = ENODE;
 
 				AnyNode* parentANode = previous->anode.wide[previousPos];
-				if (previous->anode.wide[previousPos].compare_exchange_weak(parentANode, newNode)) {
+
+				bool succ = false;
+
+				__transaction_atomic {
+					if (previous->anode.wide[previousPos] == parentANode) {
+						previous->anode.wide[previousPos] = newNode;
+						succ = true;
+					}
+				}
+
+				if (succ) {
 					completeExpansion(newNode);
 					AnyNode* wide = newNode->enode.parent->anode.wide[newNode->enode.parentPos];
 					return insert(value, hash, level, wide, previous);
@@ -120,6 +163,15 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				else {
 					return insert(value, hash, level, current, previous);
 				}
+
+				// if (previous->anode.wide[previousPos].compare_exchange_weak(parentANode, newNode)) {
+				// 	completeExpansion(newNode);
+				// 	AnyNode* wide = newNode->enode.parent->anode.wide[newNode->enode.parentPos];
+				// 	return insert(value, hash, level, wide, previous);
+				// }
+				// else {
+				// 	return insert(value, hash, level, current, previous);
+				// }
 			}
 			else {
 				AnyNode* newNode = new AnyNode;
@@ -133,27 +185,47 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				snode1->snode.hash = old->snode.hash;
 				snode1->snode.value = old->snode.value;
 				snode1->nodeType = SNODE;
-				newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode1);
+
+				__transaction_atomic {
+					if (newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp)
+						newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)] = snode1;
+					
+				}
+				//newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode1);
 
 				// Insert new snode into new anode
 				AnyNode* snode2 = new AnyNode;
 				snode2->snode.hash = hash;
 				snode2->snode.value = value;
 				snode2->nodeType = SNODE;
-				newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode2);
 
-				if (old->txn.compare_exchange_weak(txn, txn)) {
-					if (current->anode.isWide) {
-						current->anode.wide[position].compare_exchange_weak(old, newNode);
-					}
-					else {
-						current->anode.narrow[position].compare_exchange_weak(old, newNode);
-					}
-					return true;
+				__transaction_atomic {
+					if (newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp)
+						newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)] = snode2;
+					
 				}
-				else {
-					return insert(value, hash, level, current, previous);
+				//newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode2);
+
+				__transaction_atomic {
+					if (old->txn == txn) {
+						if (current->anode.isWide && current->anode.wide[position] == old) current->anode.wide[position] = newNode;
+						else if (!current->anode.isWide && current->anode.narrow[position] == old) current->anode.narrow[position] = newNode;
+						return true;
+					}
 				}
+				return insert(value, hash, level, current, previous);
+				// if (old->txn.compare_exchange_weak(txn, txn)) {
+				// 	if (current->anode.isWide) {
+				// 		current->anode.wide[position].compare_exchange_weak(old, newNode);
+				// 	}
+				// 	else {
+				// 		current->anode.narrow[position].compare_exchange_weak(old, newNode);
+				// 	}
+				// 	return true;
+				// }
+				// else {
+				// 	return insert(value, hash, level, current, previous);
+				// }
 			}
 		}
 		// SNode is frozen
@@ -177,9 +249,7 @@ bool CacheTrie::insert(int value) {
 	AnyNode* node = NULL;
 
 	if (!insert(value, std::hash<int>{}(value), 0, root, node))
-		insert(value);
-
-
+		return insert(value);
 }
 
 void *CacheTrie::testInsert(void) {
@@ -195,7 +265,13 @@ void CacheTrie::completeExpansion(AnyNode *& enode) {
 
 	copyToWide(enode->enode.narrow);
 
-	enode->enode.parent->anode.wide[enode->enode.parentPos].compare_exchange_weak(enode, enode->enode.narrow);
+	__transaction_atomic {
+		if (enode->enode.parent->anode.wide[enode->enode.parentPos] == enode) {
+			enode->enode.parent->anode.wide[enode->enode.parentPos] = enode->enode.narrow;
+		}
+	}
+
+	//enode->enode.parent->anode.wide[enode->enode.parentPos].compare_exchange_weak(enode, enode->enode.narrow);
 }
 
 void CacheTrie::copyToWide(AnyNode *& node) {
@@ -215,8 +291,13 @@ void CacheTrie::copyToWide(AnyNode *& node) {
 				temp = node->anode.wide[pos];
 				txn = curr->txn;
 				// Note: we need to change the txn value of the snode in the wide array to NoTxn after copying so other threads can modify it
-				curr->txn.compare_exchange_weak(txn, NoTxn);
-				node->anode.wide[pos].compare_exchange_weak(temp, curr);
+
+				__transaction_atomic {
+					if (curr->txn == txn) curr->txn = NoTxn;
+					if (node->anode.wide[pos] == temp) node->anode.wide[pos] = curr;
+				}
+				// curr->txn.compare_exchange_weak(txn, NoTxn);
+				// node->anode.wide[pos].compare_exchange_weak(temp, curr);
 				break;
 			case ANODE:
 				std::cout << "anode found in copy..uh oh" << std::endl;
@@ -239,22 +320,49 @@ void CacheTrie::freeze(AnyNode *& current) {
 		if (node == 0) {
 			AnyNode* initNode = new AnyNode;
 
-			if (current->anode.isWide) {
-				current->anode.wide[i].compare_exchange_weak(node, initNode);
-			} else{
-				current->anode.narrow[i].compare_exchange_weak(node, initNode);
+			__transaction_atomic {
+				if (current->anode.isWide){
+					if (current->anode.wide[i] == node) current->anode.wide[i] = initNode;
+				}
+				else {
+					if (current->anode.narrow[i] == node) current->anode.narrow[i] = initNode;
+				}
 			}
+
+			// if (current->anode.isWide) {
+			// 	current->anode.wide[i].compare_exchange_weak(node, initNode);
+			// } else{
+			// 	current->anode.narrow[i].compare_exchange_weak(node, initNode);
+			// }
 
 			node = (current->anode.isWide ? current->anode.wide[i] : current->anode.narrow[i]);
 
 			Txn oldTxn = node->txn;
-			if (!node->txn.compare_exchange_weak(oldTxn, FVNode))
-			i--;
+
+			__transaction_atomic {
+				if (node->txn == oldTxn) {
+					node->txn = FVNode;
+				}
+				else{
+					i--;
+				}
+			}
+
+			// if (!node->txn.compare_exchange_weak(oldTxn, FVNode))
+			// 	i--;
 		}
 		else if (node->nodeType == SNODE) {
 			Txn oldTxn = node->txn;
 			if (oldTxn == NoTxn) {
-				if (!node->txn.compare_exchange_weak(oldTxn, FSNode)) i--;
+				__transaction_atomic {
+					if (node->txn == oldTxn) {
+						node->txn = FSNode;
+					}
+					else{
+						i--;
+					}
+				}
+				//if (!node->txn.compare_exchange_weak(oldTxn, FSNode)) i--;
 			}
 			else if (oldTxn != FSNode) {
 				Txn oldTxn = node->txn;
@@ -267,7 +375,10 @@ void CacheTrie::freeze(AnyNode *& current) {
 			newNode->nodeType = FNODE;
 			newNode->fnode.frozen = node;
 			if (current->anode.isWide) {
-				current->anode.wide[i].compare_exchange_weak(node, newNode);
+				__transaction_atomic {
+					if (current->anode.wide[i] == node) current->anode.wide[i] = newNode;
+				}
+				//current->anode.wide[i].compare_exchange_weak(node, newNode);
 			}
 		}
 		else if (node->nodeType == FNODE) {
