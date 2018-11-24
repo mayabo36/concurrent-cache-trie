@@ -37,6 +37,5 @@ int main() {
 		if (value != 0) std::cout << value << std::endl;
 	}
 
-	std::cout << "Max level reached: " << ctrie->max_level << std::endl;
 	return 0;
 }
