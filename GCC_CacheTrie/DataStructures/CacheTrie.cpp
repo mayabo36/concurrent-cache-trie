@@ -13,15 +13,6 @@
 #include "../Nodes/AnyNode.h"
 #include "../Nodes/SNode.h"
 
-
-// TODOS
-// 1. implement lookup with cache (wed)
-// 2. test.... (wed/sunday)
-// 3. stm version (sunday/monday)
-// 4. implement cache adjust
-// 5. debug insert past level 8
-
-
 CacheTrie::CacheTrie() {
 
 	// instantiate root node to be a wide [16] array of anynodes
@@ -61,7 +52,9 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 
 		bool succ = false;
 
+		#ifdef _USE_TSX
 		__transaction_atomic {
+		#endif
 			if (current->anode.isWide) {
 				if (current->anode.wide[position] == old){
 					current->anode.wide[position] = newNode;
@@ -74,7 +67,9 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 					succ = true;
 				} 
 			}
+		#ifdef _USE_TSX
 		}
+		#endif
 
 		if (!succ) return insert (value, hash, level, current, previous);
 
@@ -113,7 +108,9 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 
 				bool succ = false;
 
+				#ifdef _USE_TSX
 				__transaction_atomic {
+				#endif					
 					if (newNode->txn == txn) {
 						if (current->anode.wide[position] == old){
 							current->anode.wide[position] = newNode;
@@ -121,7 +118,9 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 						}
 						succ = true;
 					}
+				#ifdef _USE_TSX	
 				}
+				#endif
 
 				if (!succ) return insert(value, hash, level, current, previous);
 
@@ -148,12 +147,16 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 
 				bool succ = false;
 
+				#ifdef _USE_TSX
 				__transaction_atomic {
+				#endif
 					if (previous->anode.wide[previousPos] == parentANode) {
 						previous->anode.wide[previousPos] = newNode;
 						succ = true;
 					}
+				#ifdef _USE_TSX
 				}
+				#endif
 
 				if (succ) {
 					completeExpansion(newNode);
@@ -186,11 +189,14 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				snode1->snode.value = old->snode.value;
 				snode1->nodeType = SNODE;
 
+				#ifdef _USE_TSX
 				__transaction_atomic {
+				#endif
 					if (newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp)
 						newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)] = snode1;
-					
+				#ifdef _USE_TSX	
 				}
+				#endif
 				//newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode1);
 
 				// Insert new snode into new anode
@@ -199,20 +205,27 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				snode2->snode.value = value;
 				snode2->nodeType = SNODE;
 
+				#ifdef _USE_TSX
 				__transaction_atomic {
+				#endif
 					if (newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp)
 						newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)] = snode2;
-					
+				#ifdef _USE_TSX	
 				}
+				#endif
 				//newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode2);
 
+				#ifdef _USE_TSX
 				__transaction_atomic {
+				#endif
 					if (old->txn == txn) {
 						if (current->anode.isWide && current->anode.wide[position] == old) current->anode.wide[position] = newNode;
 						else if (!current->anode.isWide && current->anode.narrow[position] == old) current->anode.narrow[position] = newNode;
 						return true;
 					}
+				#ifdef _USE_TSX
 				}
+				#endif
 				return insert(value, hash, level, current, previous);
 				// if (old->txn.compare_exchange_weak(txn, txn)) {
 				// 	if (current->anode.isWide) {
@@ -265,11 +278,15 @@ void CacheTrie::completeExpansion(AnyNode *& enode) {
 
 	copyToWide(enode->enode.narrow);
 
+	#ifdef _USE_TSX
 	__transaction_atomic {
+	#endif
 		if (enode->enode.parent->anode.wide[enode->enode.parentPos] == enode) {
 			enode->enode.parent->anode.wide[enode->enode.parentPos] = enode->enode.narrow;
 		}
+	#ifdef _USE_TSX
 	}
+	#endif
 
 	//enode->enode.parent->anode.wide[enode->enode.parentPos].compare_exchange_weak(enode, enode->enode.narrow);
 }
@@ -292,10 +309,14 @@ void CacheTrie::copyToWide(AnyNode *& node) {
 				txn = curr->txn;
 				// Note: we need to change the txn value of the snode in the wide array to NoTxn after copying so other threads can modify it
 
+				#ifdef _USE_TSX
 				__transaction_atomic {
+				#endif
 					if (curr->txn == txn) curr->txn = NoTxn;
 					if (node->anode.wide[pos] == temp) node->anode.wide[pos] = curr;
+				#ifdef _USE_TSX
 				}
+				#endif
 				// curr->txn.compare_exchange_weak(txn, NoTxn);
 				// node->anode.wide[pos].compare_exchange_weak(temp, curr);
 				break;
@@ -320,14 +341,18 @@ void CacheTrie::freeze(AnyNode *& current) {
 		if (node == 0) {
 			AnyNode* initNode = new AnyNode;
 
+			#ifdef _USE_TSX
 			__transaction_atomic {
+			#endif
 				if (current->anode.isWide){
 					if (current->anode.wide[i] == node) current->anode.wide[i] = initNode;
 				}
 				else {
 					if (current->anode.narrow[i] == node) current->anode.narrow[i] = initNode;
 				}
+			#ifdef _USE_TSX
 			}
+			#endif
 
 			// if (current->anode.isWide) {
 			// 	current->anode.wide[i].compare_exchange_weak(node, initNode);
@@ -339,14 +364,18 @@ void CacheTrie::freeze(AnyNode *& current) {
 
 			Txn oldTxn = node->txn;
 
+			#ifdef _USE_TSX
 			__transaction_atomic {
+			#endif
 				if (node->txn == oldTxn) {
 					node->txn = FVNode;
 				}
 				else{
 					i--;
 				}
+			#ifdef _USE_TSX
 			}
+			#endif
 
 			// if (!node->txn.compare_exchange_weak(oldTxn, FVNode))
 			// 	i--;
@@ -354,14 +383,18 @@ void CacheTrie::freeze(AnyNode *& current) {
 		else if (node->nodeType == SNODE) {
 			Txn oldTxn = node->txn;
 			if (oldTxn == NoTxn) {
+				#ifdef _USE_TSX
 				__transaction_atomic {
+				#endif
 					if (node->txn == oldTxn) {
 						node->txn = FSNode;
 					}
 					else{
 						i--;
 					}
+				#ifdef _USE_TSX
 				}
+				#endif
 				//if (!node->txn.compare_exchange_weak(oldTxn, FSNode)) i--;
 			}
 			else if (oldTxn != FSNode) {
@@ -375,9 +408,13 @@ void CacheTrie::freeze(AnyNode *& current) {
 			newNode->nodeType = FNODE;
 			newNode->fnode.frozen = node;
 			if (current->anode.isWide) {
+				#ifdef _USE_TSX
 				__transaction_atomic {
+				#endif
 					if (current->anode.wide[i] == node) current->anode.wide[i] = newNode;
+				#ifdef _USE_TSX
 				}
+				#endif
 				//current->anode.wide[i].compare_exchange_weak(node, newNode);
 			}
 		}
