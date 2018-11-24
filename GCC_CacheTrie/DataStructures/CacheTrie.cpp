@@ -13,6 +13,8 @@
 #include "../Nodes/AnyNode.h"
 #include "../Nodes/SNode.h"
 
+bool DEBUG = false;
+
 CacheTrie::CacheTrie() {
 
 	// instantiate root node to be a wide [16] array of anynodes
@@ -38,6 +40,8 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 
 	int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
 
+	if (DEBUG) std::cout << "[0]attempting to insert " << value << " at " << position << " and level " << level << std::endl;
+
 	AnyNode* old;
 	if (current->anode.isWide) old = current->anode.wide[position];
 	else old = current->anode.narrow[position];
@@ -50,28 +54,28 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 		newNode->snode.value = value;
 		newNode->nodeType = SNODE;
 
-		bool succ = false;
-
 		#ifdef _USE_TSX
 		__transaction_atomic {
 		#endif
 			if (current->anode.isWide) {
 				if (current->anode.wide[position] == old){
+					if (DEBUG) std::cout << "[1]inserting " << value << " at wide " << position << " and level " << level << std::endl;
 					current->anode.wide[position] = newNode;
-					succ = true;
+					return true;
 				} 
 			}
 			else {
 				if (current->anode.narrow[position] == old) {
+					if (DEBUG) std::cout << "[2]inserting " << value << " at narrow " << position << " and level " << level << std::endl;
 					current->anode.narrow[position] = newNode;
-					succ = true;
+					return true;
 				} 
 			}
 		#ifdef _USE_TSX
 		}
 		#endif
 
-		if (!succ) return insert (value, hash, level, current, previous);
+		return insert (value, hash, level, current, previous);
 
 		// if (current->anode.isWide) {
 		// 	if ( current->anode.wide[position].compare_exchange_weak(old, newNode)){
@@ -113,6 +117,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				#endif					
 					if (newNode->txn == txn) {
 						if (current->anode.wide[position] == old){
+							if (DEBUG) std::cout << "[3]inserting " << value << " at wide " << position << " and level " << level << std::endl;
 							current->anode.wide[position] = newNode;
 							return true;
 						}
@@ -151,6 +156,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				__transaction_atomic {
 				#endif
 					if (previous->anode.wide[previousPos] == parentANode) {
+						if (DEBUG) std::cout << "[4]inserting enode at wide " << previousPos << " and level " << (level - 4) << std::endl;
 						previous->anode.wide[previousPos] = newNode;
 						succ = true;
 					}
@@ -192,8 +198,10 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				#ifdef _USE_TSX
 				__transaction_atomic {
 				#endif
-					if (newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp)
+					if (newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp) {
+						if (DEBUG) std::cout << "[5]inserting " << snode1->snode.value << " at narrow " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << " and level " << newNode->anode.level << std::endl;
 						newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)] = snode1;
+					}
 				#ifdef _USE_TSX	
 				}
 				#endif
@@ -208,8 +216,10 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				#ifdef _USE_TSX
 				__transaction_atomic {
 				#endif
-					if (newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp)
+					if (newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp) { 
+						if (DEBUG) std::cout << "[6]inserting " << snode2->snode.value << " at narrow " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << " and level " << newNode->anode.level << std::endl;
 						newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)] = snode2;
+					}
 				#ifdef _USE_TSX	
 				}
 				#endif
@@ -219,8 +229,14 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				__transaction_atomic {
 				#endif
 					if (old->txn == txn) {
-						if (current->anode.isWide && current->anode.wide[position] == old) current->anode.wide[position] = newNode;
-						else if (!current->anode.isWide && current->anode.narrow[position] == old) current->anode.narrow[position] = newNode;
+						if (current->anode.isWide && current->anode.wide[position] == old){
+							if (DEBUG) std::cout << "[7]inserting anode at wide " << position << " and level " << level << std::endl;
+							current->anode.wide[position] = newNode;
+						} 
+						else if (!current->anode.isWide && current->anode.narrow[position] == old){
+							if (DEBUG) std::cout << "[8]inserting anode at narrow " << position << " and level " << level << std::endl;
+							current->anode.narrow[position] = newNode;
+						} 
 						return true;
 					}
 				#ifdef _USE_TSX
@@ -267,7 +283,7 @@ bool CacheTrie::insert(int value) {
 
 void *CacheTrie::testInsert(void) {
 
-	for (int i = 1; i < 251; i++) {
+	for (int i = 1; i < 250; i++) {
 		insert(i);
 	}
 }

@@ -16,7 +16,7 @@ int main() {
  	int rs;
 	
 	pthread_t t0; //(&CacheTrie::testInsert, std::ref(ctrie));
-	pthread_t t1; //(&CacheTrie::testInsert, std::ref(ctrie));
+	//pthread_t t1; //(&CacheTrie::testInsert, std::ref(ctrie));
 
 	pthread_create(&t0, NULL, print_message, ctrie);
 
@@ -32,7 +32,7 @@ int main() {
 	std::cout << "\n\nLookup Print:" << std::endl;
 
 	// SEG FAULTS bigger numbers 
-	for(int i = 1; i < 251; i++) {
+	for(int i = 1; i < 250; i++) {
 		int value = ctrie->lookup(i);
 		if (value != 0) std::cout << value << std::endl;
 	}
