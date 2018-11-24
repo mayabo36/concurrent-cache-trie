@@ -281,9 +281,9 @@ bool CacheTrie::insert(int value) {
 		return insert(value);
 }
 
-void *CacheTrie::testInsert(void) {
+void CacheTrie::testInsert(int thread_id) {
 
-	for (int i = 1; i < 50000; i++) {
+	for (int i = 1; i <= 250; i += thread_id) {
 		insert(i);
 	}
 }
