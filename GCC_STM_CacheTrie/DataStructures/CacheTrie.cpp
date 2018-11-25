@@ -8,13 +8,15 @@
 #include <iostream>
 #include <unistd.h>
 #include <atomic> 
+#include <chrono>
+#include <thread>
 #include "CacheTrie.h"
 #include "../Nodes/ANode.h"
 #include "../Nodes/AnyNode.h"
 #include "../Nodes/SNode.h"
 
 bool DEBUG = false;
-int MAX_TRIES = 100;
+int MAX_TRIES = 10;
 
 CacheTrie::CacheTrie() {
 
@@ -70,6 +72,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 		}
 		#endif
 
+		if (DEBUG) std::cout << "failed to insert at empty node" << std::endl;
 		return insert (value, hash, level, current, previous);
 	}
 
@@ -107,7 +110,10 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				}
 				#endif
 
-				if (!succ) return insert(value, hash, level, current, previous);
+				if (!succ) {
+					if (DEBUG) std::cout << "failed to update node" << std::endl;
+					return insert(value, hash, level, current, previous);
+				} 
 			}
 			else if (!current->anode.isWide) {
 				int previousPos = (hash >> (level - 4)) & ((previous->anode.isWide ? 16 : 4) - 1);
@@ -142,6 +148,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 					return insert(value, hash, level, wide, previous);
 				}
 				else {
+					if (DEBUG) std::cout << "failed to insert enode" << std::endl;
 					return insert(value, hash, level, current, previous);
 				}
 			}
@@ -221,6 +228,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				#ifdef _USE_TSX
 				}
 				#endif
+				if (DEBUG) std::cout << "failed to add new narrow level" << std::endl;
 				return insert(value, hash, level, current, previous);
 			}
 		}
@@ -229,6 +237,8 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 			return false;
 		}
 		else { // Otherwise help finish the operation that another thread is performing and try again
+			//std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ HERE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`"  << txn <<  std::endl;
+			//std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			return insert(value, hash, level, current, previous);
 		}
 	}
@@ -260,7 +270,7 @@ bool CacheTrie::insert(int value) {
 
 void CacheTrie::testInsert(int thread_id) {
 
-	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 100); i++) {
+	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 50); i++) {
 		insert(i);
 	}
 
@@ -452,7 +462,7 @@ void CacheTrie::freeze(AnyNode *& current) {
 			}
 			else if (oldTxn != FSNode) {
 				Txn oldTxn = node->txn;
-				// commit the pending changes ?
+				// commit the pending changes ? //HERE?????????????
 				i--;
 			}
 		}

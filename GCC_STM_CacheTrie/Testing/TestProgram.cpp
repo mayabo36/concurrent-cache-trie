@@ -4,7 +4,7 @@
 #include <functional>
 #include <cstdlib>
 
-#define NUM_THREADS 4
+#define NUM_THREADS 8
 
 CacheTrie* ctrie;
 
