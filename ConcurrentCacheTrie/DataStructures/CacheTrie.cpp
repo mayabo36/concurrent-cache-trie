@@ -183,7 +183,7 @@ bool CacheTrie::insert(int value) {
 
 void CacheTrie::testInsert(int thread_id) {
 
-	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 200); i++) {
+	for (int i = (600 * thread_id); i <= ((600 * thread_id) + 600); i++) {
 		insert(i);
 	}
 }
@@ -380,8 +380,14 @@ AnyNode** CacheTrie::createCache(int level, AnyNode* parent []) {
 }
 
 void CacheTrie::printTree(ANode* anode) {
+	printTree(anode, "");
+}
+
+void CacheTrie::printTree(ANode* anode, std::string formatString) {
 
 	int length = (anode->isWide ? 16 : 4);
+
+	std::cout << formatString << "Beginning new search at level " << anode->level << " type " << (anode->isWide ? "wide" : "narrow") << std::endl;
 
 	for (int i = 0; i < length; i++) {
 
@@ -392,16 +398,17 @@ void CacheTrie::printTree(ANode* anode) {
 		if (node != 0) {
 			switch (node->nodeType) {
 			case SNODE:
-				std::cout << node->snode.value << " at location " << i << std::endl;
+				std::cout << formatString << node->snode.value << " at location " << i << std::endl;
 				break;
 			case ANODE:
-				std::cout << "Traverse anode at " << i << " and level " << (node->anode.level + 4) << std::endl;
-				printTree(&node->anode);
-				std::cout << "End traversal anode at " << i << std::endl;
+				std::cout << formatString << "Traverse anode at location " << i << " and level " << (node->anode.level) << std::endl;
+				std::string newFormatString = formatString + "\t";
+				printTree(&node->anode, newFormatString);
+				std::cout << formatString << "End traversal anode at location " << i << " and level " << (node->anode.level) << std::endl;
 				break;
 			}
 		}
-	}
+	}	
 }
 
 void CacheTrie::inhabit(AnyNode** cache, AnyNode* newValue, std::size_t hash, int cacheeLevel) {

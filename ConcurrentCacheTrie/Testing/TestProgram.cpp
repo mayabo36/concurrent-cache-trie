@@ -4,7 +4,7 @@
 #include <functional>
 #include <cstdlib>
 
-#define NUM_THREADS 8
+#define NUM_THREADS 2
 
 CacheTrie* ctrie;
 
@@ -39,15 +39,15 @@ int main() {
 		pthread_join(threads[id], NULL);
 	}
 	
-	// ANode* tempRoot = &ctrie->root->anode;
-	// //std::cout << "\n\nTree Print:" << std::endl;
-	// //ctrie->printTree(tempRoot);
+	ANode* tempRoot = &ctrie->root->anode;
+	std::cout << "\n\nTree Print:" << std::endl;
+	ctrie->printTree(tempRoot);
 
-	// std::cout << "\n\nLookup Print:" << std::endl;
+	std::cout << "\n\nLookup Print:" << std::endl;
 
 	// SEG FAULTS bigger numbers 
 	int n = 0;
-	for(int i = 1; i <= ((NUM_THREADS * 100) + 200); i++) {
+	for(int i = 600; i <= ((NUM_THREADS * 600) + 600); i++) {
 		int value = ctrie->lookup(i);
 		if (value != 0) {
 			n++;
