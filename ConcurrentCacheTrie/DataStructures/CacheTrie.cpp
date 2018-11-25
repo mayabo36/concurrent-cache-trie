@@ -69,8 +69,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 
 	// Check if the position is occupied by an ANode
 	else if (old->nodeType == ANODE) {
-		//ANode* oldANode = &old->anode;
-		return insert(value, hash, level + 4, old, current); // May break everything, needs testing
+		return insert(value, hash, level + 4, old, current);
 	}
 
 	// If the posistion is occupied by an SNode
@@ -132,7 +131,6 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				AnyNode* temp1 = newNode->anode.narrow[snode1Pos];
 
 				AnyNode* t = NULL;
-				//insert(old->snode.value, old->snode.hash, 0, newNode, t);
 
 				if (insert(old->snode.value, old->snode.hash, newNode->anode.level, newNode, current)) {//newNode->anode.narrow[snode1Pos].compare_exchange_weak(temp1, snode1)){
 					if (DEBUG) std::cout << "[5]inserting " << snode1->snode.value << " at narrow " << snode1Pos << " and level " << newNode->anode.level << "\n" << std::endl;
