@@ -166,13 +166,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 
 				if (succ) {
 					completeExpansion(newNode);
-					#ifdef _USE_TSX
-					__transaction_atomic { 
-					#endif
-						AnyNode* wide = newNode->enode.parent->anode.wide[newNode->enode.parentPos];
-					#ifdef _USE_TSX
-					}
-					#endif
+					AnyNode* wide = newNode->enode.parent->anode.wide[newNode->enode.parentPos];
 					return insert(value, hash, level, wide, previous);
 				}
 				else {
@@ -289,7 +283,7 @@ bool CacheTrie::insert(int value) {
 
 void CacheTrie::testInsert(int thread_id) {
 
-	for (int i = 1; i <= 50000; i += thread_id) {
+	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 100); i++) {
 		insert(i);
 	}
 }

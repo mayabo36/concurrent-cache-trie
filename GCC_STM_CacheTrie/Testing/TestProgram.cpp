@@ -14,12 +14,6 @@ void *runTest(void* arg) {
 	ctrie->testInsert(tid);
 }
 
-// void *test(void *threadid) {
-//    long* tid;
-//    tid = (long*)threadid;
-//    std::cout << "Hello World! Thread ID, " << tid << std::endl;
-// }
-
 int main() {
 	ctrie = new CacheTrie();
  	
@@ -47,7 +41,7 @@ int main() {
 
 	// SEG FAULTS bigger numbers 
 	int n = 0;
-	for(int i = 1; i <= 50000; i++) {
+	for(int i = 1; i <= ((NUM_THREADS * 100) + 100); i++) {
 		int value = ctrie->lookup(i);
 		if (value != 0) {
 			n++;
