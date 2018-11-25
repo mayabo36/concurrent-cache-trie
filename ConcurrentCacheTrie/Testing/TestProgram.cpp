@@ -41,7 +41,7 @@ int main() {
 	
 	ANode* tempRoot = &ctrie->root->anode;
 	std::cout << "\n\nTree Print:" << std::endl;
-	ctrie->printTree(tempRoot);
+	//ctrie->printTree(tempRoot);
 
 	std::cout << "\n\nLookup Print:" << std::endl;
 

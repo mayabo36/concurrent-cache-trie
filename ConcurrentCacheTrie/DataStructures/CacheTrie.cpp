@@ -175,8 +175,10 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 bool CacheTrie::insert(int value) {
 	AnyNode* node = NULL;
 
-	if (!insert(value, std::hash<int>{}(value), 0, root, node))
+	if (!insert(value, std::hash<int>{}(value), 0, root, node)){
+		std::cout << "failed to insert " << value << std::endl;
 		insert(value);
+	}
 
 
 }
