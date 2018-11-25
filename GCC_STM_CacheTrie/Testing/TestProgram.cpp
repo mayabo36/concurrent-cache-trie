@@ -4,7 +4,7 @@
 #include <functional>
 #include <cstdlib>
 
-#define NUM_THREADS 2
+#define NUM_THREADS 8
 
 CacheTrie* ctrie;
 
@@ -47,7 +47,7 @@ int main() {
 
 	// SEG FAULTS bigger numbers 
 	int n = 0;
-	for(int i = 1; i <= 250; i++) {
+	for(int i = 1; i <= 50000; i++) {
 		int value = ctrie->lookup(i);
 		if (value != 0) {
 			n++;
