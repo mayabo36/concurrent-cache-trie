@@ -4,7 +4,7 @@
 #include <functional>
 #include <cstdlib>
 
-#define NUM_THREADS 2
+#define NUM_THREADS 8
 
 CacheTrie* ctrie;
 
@@ -13,12 +13,6 @@ void *runTest(void* arg) {
 	int tid = *thread_id;
 	ctrie->testInsert(tid);
 }
-
-// void *test(void *threadid) {
-//    long* tid;
-//    tid = (long*)threadid;
-//    std::cout << "Hello World! Thread ID, " << tid << std::endl;
-// }
 
 int main() {
 	ctrie = new CacheTrie();
@@ -41,18 +35,18 @@ int main() {
 	
 	ANode* tempRoot = &ctrie->root->anode;
 	std::cout << "\n\nTree Print:" << std::endl;
-	//ctrie->printTree(tempRoot);
+	ctrie->printTree(tempRoot);
 
 	std::cout << "\n\nLookup Print:" << std::endl;
 
 	// SEG FAULTS bigger numbers 
 	int n = 0;
-	for(int i = 600; i <= ((NUM_THREADS * 600) + 600); i++) {
+	for(int i = 100; i <= ((100 * NUM_THREADS) + 100); i++) {
 		int value = ctrie->lookup(i);
 		if (value != 0) {
 			n++;
-			//std::cout << value << std::endl;
-		} 
+			std::cout << value << std::endl;
+		}
 	}
 	std::cout << "Items successfully inserted/found: " << n << std::endl;
 
