@@ -183,7 +183,7 @@ bool CacheTrie::insert(int value) {
 
 void CacheTrie::testInsert(int thread_id) {
 
-	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 100); i++) {
+	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 200); i++) {
 		insert(i);
 	}
 }
