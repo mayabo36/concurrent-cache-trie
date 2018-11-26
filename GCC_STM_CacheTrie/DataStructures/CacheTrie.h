@@ -27,7 +27,7 @@ struct CacheTrie {
     int lookup(int value);
     void printTree(ANode* anode);
     void printTree(ANode* anode, std::string formatString);
-    void testInsert(int thread_id);
+    std::string testTrie(int thread_id);
     AnyNode** createCache(int level, AnyNode* parent []);
     void inhabit(AnyNode** cache, AnyNode* newValue, std::size_t hash, int cacheeLevel);
     void recordCacheMiss(int thread_id);

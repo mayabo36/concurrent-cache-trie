@@ -7,11 +7,12 @@
 #define NUM_THREADS 8
 
 CacheTrie* ctrie;
+std::string thread_results[NUM_THREADS];
 
 void *runTest(void* arg) {
 	int *thread_id = (int*) arg;
 	int tid = *thread_id;
-	ctrie->testInsert(tid);
+	thread_results[tid] = ctrie->testTrie(tid);
 }
 
 int main() {
@@ -32,23 +33,27 @@ int main() {
 	for(int id = 1; id <= NUM_THREADS; id++) {
 		pthread_join(threads[id], NULL);
 	}
+
+	for(int id = 1; id <= NUM_THREADS; id++) {
+		std::cout << thread_results[id] << std::endl;
+	}	
 	
-	ANode* tempRoot = &ctrie->root->anode;
-	std::cout << "\n\nTree Print:" << std::endl;
-	ctrie->printTree(tempRoot);
+	// ANode* tempRoot = &ctrie->root->anode;
+	// std::cout << "\n\nTree Print:" << std::endl;
+	// ctrie->printTree(tempRoot);
 
-	std::cout << "\n\nLookup Print:" << std::endl;
+	// std::cout << "\n\nLookup Print:" << std::endl;
 
-	// SEG FAULTS bigger numbers 
-	int n = 0;
-	for(int i = 100; i <= ((100 * NUM_THREADS) + 100); i++) {
-		int value = ctrie->lookup(i);
-		if (value != 0) {
-			n++;
-			std::cout << value << std::endl;
-		}
-	}
-	std::cout << "Items successfully inserted/found: " << n << std::endl;
+	// // SEG FAULTS bigger numbers 
+	// int n = 0;
+	// for(int i = 100; i <= ((100 * NUM_THREADS) + 100); i++) {
+	// 	int value = ctrie->lookup(i);
+	// 	if (value != 0) {
+	// 		n++;
+	// 		std::cout << value << std::endl;
+	// 	}
+	// }
+	// std::cout << "Items successfully inserted/found: " << n << std::endl;
 
 	return 0;
 }

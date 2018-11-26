@@ -212,8 +212,6 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 			return false;
 		}
 		else { // Otherwise help finish the operation that another thread is performing and try again
-			//std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ HERE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`"  << txn <<  std::endl;
-			//std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			return insert(value, hash, level, current, previous);
 		}
 	}
@@ -236,87 +234,20 @@ bool CacheTrie::insert(int value) {
 
 }
 
-void CacheTrie::testInsert(int thread_id) {
+std::string CacheTrie::testTrie(int thread_id) {
 
 	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 100); i++) {
 		insert(i);
 	}
 
-	// if (thread_id == 1) {
-	// 	insert(16);
-	// 	insert(32);
-	// 	insert(48);
-	// 	insert(64);
-	// 	insert(80);
-	// 	insert(96);
-	// 	insert(112);
-	// 	insert(128);
-	// 	insert(144);
-	// 	insert(160);
-	// 	insert(176);
-	// 	insert(192);
-	// 	insert(208);
-	// 	insert(224);
-	// 	insert(240);
-	// 	insert(256);
-	// }
+	int n = 0; 
+	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 100); i++) {
+		if (lookup(i) != 0) n++;
+	}
 
-	// if (thread_id == 2) {
-	// 	insert(512);
-	// 	insert(768);
-	// 	insert(1024);
-	// 	insert(1280);
-	// 	insert(1536);
-	// 	insert(1792);
-	// 	insert(2048);
-	// 	insert(2304);
-	// 	insert(2560);
-	// 	insert(2816);
-	// 	insert(3072);
-	// 	insert(3328);
-	// 	insert(3584);
-	// 	insert(3840);
-	// 	insert(4096);
-	// 	insert(4352);
-	// }
-	
-	// if (thread_id == 3) {
-	// 	insert(8704);
-	// 	insert(13056);
-	// 	insert(17408);
-	// 	insert(21760);
-	// 	insert(26112);
-	// 	insert(30468);
-	// 	insert(34820);
-	// 	insert(39172);
-	// 	insert(43524);
-	// 	insert(47876);
-	// 	insert(52228);
-	// 	insert(56580);
-	// 	insert(60932);
-	// 	insert(65284);
-	// 	insert(69636);
-	// 	insert(73988);
-	// }
+	std::string result = "Thread " + std::to_string(thread_id) + " inserted values " + std::to_string(100 * thread_id) + " through " + std::to_string((100 * thread_id) + 100) + " and successfully lookedup " + std::to_string(n) + " of those values.";
 
-	// if (thread_id == 4) {
-	// 	insert(147976);
-	// 	insert(221964);
-	// 	insert(443928);
-	// 	insert(665982);
-	// 	insert(887856);
-	// 	insert(1109820);
-	// 	insert(1331784);
-	// 	insert(1553748);
-	// 	insert(1775712);
-	// 	insert(1997676);
-	// 	insert(2219640);
-	// 	insert(2441604);
-	// 	insert(2663568);
-	// 	insert(2885532);
-	// 	insert(3107496);
-	// 	insert(3329460);
-	// }		
+	return result;
 }
 
 void CacheTrie::completeExpansion(AnyNode *& enode) {
