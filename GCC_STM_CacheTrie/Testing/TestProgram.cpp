@@ -41,7 +41,7 @@ int main() {
 
 	// SEG FAULTS bigger numbers 
 	int n = 0;
-	for(int i = 1; i <= ((NUM_THREADS * 80000) + 100); i++) {
+	for(int i = 1; i <= 5000000; i++) {
 		int value = ctrie->lookup(i);
 		if (value != 0) {
 			n++;

@@ -105,6 +105,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				newNode->nodeType = ENODE;
 
 				AnyNode* parentANode = previous->anode.wide[previousPos];
+
 				if (previous->anode.wide[previousPos].compare_exchange_weak(parentANode, newNode)) {
 					if (DEBUG) std::cout << "[4]inserting enode at wide " << previousPos << " and level " << (level - 4) << "\n" << std::endl;
 					completeExpansion(newNode);
@@ -128,11 +129,8 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				snode1->snode.value = old->snode.value;
 				snode1->nodeType = SNODE;
 				int snode1Pos = (snode1->snode.hash >> (newNode->anode.level)) & (4 - 1);
-				AnyNode* temp1 = newNode->anode.narrow[snode1Pos];
 
-				AnyNode* t = NULL;
-
-				if (insert(old->snode.value, old->snode.hash, newNode->anode.level, newNode, current)) {//newNode->anode.narrow[snode1Pos].compare_exchange_weak(temp1, snode1)){
+				if (insert(old->snode.value, old->snode.hash, newNode->anode.level, newNode, current)) {
 					if (DEBUG) std::cout << "[5]inserting " << snode1->snode.value << " at narrow " << snode1Pos << " and level " << newNode->anode.level << "\n" << std::endl;
 				}else {
 					std::cout << "failure to insert " << snode1->snode.value << " at narrow " << snode1Pos << " and level " << newNode->anode.level << "\n" << std::endl;
@@ -144,9 +142,8 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				snode2->snode.value = value;
 				snode2->nodeType = SNODE;
 				int snode2Pos = (snode2->snode.hash >> (newNode->anode.level)) & (4 - 1);
-				AnyNode* temp2 = newNode->anode.narrow[snode2Pos];
 				
-				if (insert(value, hash, newNode->anode.level, newNode, current)){//newNode->anode.narrow[snode2Pos].compare_exchange_weak(temp2, snode2)){
+				if (insert(value, hash, newNode->anode.level, newNode, current)){
 					if (DEBUG) std::cout << "[5]inserting " << snode2->snode.value << " at narrow " << snode2Pos << " and level " << newNode->anode.level << "\n" << std::endl;
 				}else {
 					std::cout << "failure to insert " << snode2->snode.value << " at narrow " << snode2Pos << " and level " << newNode->anode.level << "\n" << std::endl;
@@ -295,7 +292,6 @@ void CacheTrie::copyToWide(AnyNode *& node) {
 				std::cout << "anode found in copy..uh oh" << std::endl;
 				break; // hmm
 			}
-
 		}
 	}
 
@@ -322,7 +318,7 @@ void CacheTrie::freeze(AnyNode *& current) {
 
 			Txn oldTxn = node->txn;
 			if (!node->txn.compare_exchange_weak(oldTxn, FVNode))
-			i--;
+				i--;
 		}
 		else if (node->nodeType == SNODE) {
 			Txn oldTxn = node->txn;
