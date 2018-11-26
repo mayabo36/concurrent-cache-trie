@@ -191,16 +191,16 @@ bool CacheTrie::insert(int value) {
 
 std::string CacheTrie::testTrie(int thread_id) {
 
-	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 100); i++) {
+	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 10000); i++) {
 		insert(i);
 	}
 
 	int n = 0; 
-	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 100); i++) {
+	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 10000); i++) {
 		if (lookup(i) != 0) n++;
 	}
 
-	std::string result = "Thread " + std::to_string(thread_id) + " inserted values " + std::to_string(100 * thread_id) + " through " + std::to_string((100 * thread_id) + 100) + " and successfully lookedup " + std::to_string(n) + " of those values.";
+	std::string result = "Thread " + std::to_string(thread_id) + " inserted values " + std::to_string(100 * thread_id) + " through " + std::to_string((100 * thread_id) + 10000) + " and successfully lookedup " + std::to_string(n) + " of those values.";
 	return result;
 }
 
