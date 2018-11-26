@@ -8,12 +8,15 @@
 #include <iostream>
 #include <unistd.h>
 #include <atomic> 
+#include <chrono>
+#include <thread>
 #include "CacheTrie.h"
 #include "../Nodes/ANode.h"
 #include "../Nodes/AnyNode.h"
 #include "../Nodes/SNode.h"
 
 bool DEBUG = false;
+int MAX_TRIES = 10;
 
 CacheTrie::CacheTrie() {
 
@@ -31,12 +34,6 @@ CacheTrie::CacheTrie() {
 
 // Key is the word being inserted
 bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& current, AnyNode *& previous) {
-
-
-	// if (level > CacheTrie::max_level){
-	// 	int temp = max_level;
-	// 	max_level.compare_exchange_weak(temp, level);
-	// } 
 
 	int position = (hash >> (level)) & ((current->anode.isWide ? 16 : 4) - 1);
 
@@ -75,27 +72,13 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 		}
 		#endif
 
+		if (DEBUG) std::cout << "failed to insert at empty node" << std::endl;
 		return insert (value, hash, level, current, previous);
-
-		// if (current->anode.isWide) {
-		// 	if ( current->anode.wide[position].compare_exchange_weak(old, newNode)){
-        //         return true; 
-        //     }
-		// 	else return insert(value, hash, level, current, previous);
-		// }
-		// else {
-		// 	if (current->anode.narrow[position].compare_exchange_weak(old, newNode)){
-        //         return true;
-        //     }
-		// 	else return insert(value, hash, level, current, previous);
-		// }
-
 	}
 
 	// Check if the position is occupied by an ANode
 	else if (old->nodeType == ANODE) {
-		//ANode* oldANode = &old->anode;
-		return insert(value, hash, level + 4, old, current); // May break everything, needs testing
+		return insert(value, hash, level + 4, old, current);
 	}
 
 	// If the posistion is occupied by an SNode
@@ -127,15 +110,10 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				}
 				#endif
 
-				if (!succ) return insert(value, hash, level, current, previous);
-
-				// if (newNode->txn.compare_exchange_weak(txn, txn)) { // Making sure NoTxn
-				// 	current->anode.wide[position].compare_exchange_weak(old, newNode);
-				// 	return true;
-				// }
-				// else {
-				// 	return insert(value, hash, level, current, previous);
-				// }
+				if (!succ) {
+					if (DEBUG) std::cout << "failed to update node" << std::endl;
+					return insert(value, hash, level, current, previous);
+				} 
 			}
 			else if (!current->anode.isWide) {
 				int previousPos = (hash >> (level - 4)) & ((previous->anode.isWide ? 16 : 4) - 1);
@@ -170,17 +148,9 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 					return insert(value, hash, level, wide, previous);
 				}
 				else {
+					if (DEBUG) std::cout << "failed to insert enode" << std::endl;
 					return insert(value, hash, level, current, previous);
 				}
-
-				// if (previous->anode.wide[previousPos].compare_exchange_weak(parentANode, newNode)) {
-				// 	completeExpansion(newNode);
-				// 	AnyNode* wide = newNode->enode.parent->anode.wide[newNode->enode.parentPos];
-				// 	return insert(value, hash, level, wide, previous);
-				// }
-				// else {
-				// 	return insert(value, hash, level, current, previous);
-				// }
 			}
 			else {
 				AnyNode* newNode = new AnyNode;
@@ -194,36 +164,52 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				snode1->snode.hash = old->snode.hash;
 				snode1->snode.value = old->snode.value;
 				snode1->nodeType = SNODE;
+				int snode1Pos = (snode1->snode.hash >> (newNode->anode.level)) & (4 - 1);
+				AnyNode* temp1 = newNode->anode.narrow[snode1Pos];
 
-				#ifdef _USE_TSX
-				__transaction_atomic {
-				#endif
-					if (newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp) {
-						if (DEBUG) std::cout << "[5]inserting " << snode1->snode.value << " at narrow " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << " and level " << newNode->anode.level << "\n" << std::endl;
-						newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)] = snode1;
-					}
-				#ifdef _USE_TSX	
+				AnyNode* t = NULL;
+
+				if (insert(old->snode.value, old->snode.hash, newNode->anode.level, newNode, current)) {//newNode->anode.narrow[snode1Pos].compare_exchange_weak(temp1, snode1)){
+					if (DEBUG) std::cout << "[5]inserting " << snode1->snode.value << " at narrow " << snode1Pos << " and level " << newNode->anode.level << "\n" << std::endl;
+				}else {
+					std::cout << "failure to insert " << snode1->snode.value << " at narrow " << snode1Pos << " and level " << newNode->anode.level << "\n" << std::endl;
 				}
-				#endif
-				//newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode1);
+
+				// #ifdef _USE_TSX
+				// __transaction_atomic {
+				// #endif
+				// 	if (newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp) {
+				// 		if (DEBUG) std::cout << "[5]inserting " << snode1->snode.value << " at narrow " << ((snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)) << " and level " << newNode->anode.level << "\n" << std::endl;
+				// 		newNode->anode.narrow[(snode1->snode.hash >> (newNode->anode.level)) & (4 - 1)] = snode1;
+				// 	}
+				// #ifdef _USE_TSX	
+				// }
+				// #endif
 
 				// Insert new snode into new anode
 				AnyNode* snode2 = new AnyNode;
 				snode2->snode.hash = hash;
 				snode2->snode.value = value;
 				snode2->nodeType = SNODE;
-
-				#ifdef _USE_TSX
-				__transaction_atomic {
-				#endif
-					if (newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp) { 
-						if (DEBUG) std::cout << "[6]inserting " << snode2->snode.value << " at narrow " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << " and level " << newNode->anode.level << "\n" << std::endl;
-						newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)] = snode2;
-					}
-				#ifdef _USE_TSX	
+				int snode2Pos = (snode2->snode.hash >> (newNode->anode.level)) & (4 - 1);
+				AnyNode* temp2 = newNode->anode.narrow[snode2Pos];
+				
+				if (insert(value, hash, newNode->anode.level, newNode, current)){//newNode->anode.narrow[snode2Pos].compare_exchange_weak(temp2, snode2)){
+					if (DEBUG) std::cout << "[5]inserting " << snode2->snode.value << " at narrow " << snode2Pos << " and level " << newNode->anode.level << "\n" << std::endl;
+				}else {
+					std::cout << "failure to insert " << snode2->snode.value << " at narrow " << snode2Pos << " and level " << newNode->anode.level << "\n" << std::endl;
 				}
-				#endif
-				//newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)].compare_exchange_weak(temp, snode2);
+
+				// #ifdef _USE_TSX
+				// __transaction_atomic {
+				// #endif
+				// 	if (newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)] == temp) { 
+				// 		if (DEBUG) std::cout << "[6]inserting " << snode2->snode.value << " at narrow " << ((snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)) << " and level " << newNode->anode.level << "\n" << std::endl;
+				// 		newNode->anode.narrow[(snode2->snode.hash >> (newNode->anode.level)) & (4 - 1)] = snode2;
+				// 	}
+				// #ifdef _USE_TSX	
+				// }
+				// #endif
 
 				#ifdef _USE_TSX
 				__transaction_atomic {
@@ -242,19 +228,8 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				#ifdef _USE_TSX
 				}
 				#endif
+				if (DEBUG) std::cout << "failed to add new narrow level" << std::endl;
 				return insert(value, hash, level, current, previous);
-				// if (old->txn.compare_exchange_weak(txn, txn)) {
-				// 	if (current->anode.isWide) {
-				// 		current->anode.wide[position].compare_exchange_weak(old, newNode);
-				// 	}
-				// 	else {
-				// 		current->anode.narrow[position].compare_exchange_weak(old, newNode);
-				// 	}
-				// 	return true;
-				// }
-				// else {
-				// 	return insert(value, hash, level, current, previous);
-				// }
 			}
 		}
 		// SNode is frozen
@@ -262,6 +237,8 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 			return false;
 		}
 		else { // Otherwise help finish the operation that another thread is performing and try again
+			//std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ HERE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`"  << txn <<  std::endl;
+			//std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			return insert(value, hash, level, current, previous);
 		}
 	}
@@ -276,16 +253,83 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 
 bool CacheTrie::insert(int value) {
 	AnyNode* node = NULL;
+	int tryNum = 1;
 
-	if (!insert(value, std::hash<int>{}(value), 0, root, node))
-		return insert(value);
+	if (!insert(value, std::hash<int>{}(value), 0, root, node)){
+		while (tryNum <= MAX_TRIES){
+			if (insert(value)) return true;
+			else {
+				tryNum++;
+			}
+		}
+		return false;
+	}
+
+	return true;
 }
 
 void CacheTrie::testInsert(int thread_id) {
 
-	for (int i = 1; i <= 250; i += thread_id) {
+	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 50); i++) {
 		insert(i);
 	}
+
+	// if (thread_id == 1) {
+	// 	insert(16);
+	// 	insert(32);
+	// 	insert(48);
+	// 	insert(64);
+	// 	insert(80);
+	// 	insert(96);
+	// 	insert(112);
+	// 	insert(128);
+	// 	insert(144);
+	// 	insert(160);
+	// 	insert(176);
+	// 	insert(192);
+	// 	insert(208);
+	// 	insert(224);
+	// 	insert(240);
+	// 	insert(256);
+	// }
+
+	// if (thread_id == 2) {
+	// 	insert(512);
+	// 	insert(768);
+	// 	insert(1024);
+	// 	insert(1280);
+	// 	insert(1536);
+	// 	insert(1792);
+	// 	insert(2048);
+	// 	insert(2304);
+	// 	insert(2560);
+	// 	insert(2816);
+	// 	insert(3072);
+	// 	insert(3328);
+	// 	insert(3584);
+	// 	insert(3840);
+	// 	insert(4096);
+	// 	insert(4352);
+	// }
+	
+	// if (thread_id == 3) {
+	// 	insert(8704);
+	// 	insert(13056);
+	// 	insert(17408);
+	// 	insert(21760);
+	// 	insert(26112);
+	// 	insert(30468);
+	// 	insert(34820);
+	// 	insert(39172);
+	// 	insert(43524);
+	// 	insert(47876);
+	// 	insert(52228);
+	// 	insert(56580);
+	// 	insert(60932);
+	// 	insert(65284);
+	// 	insert(69636);
+	// 	insert(73988);
+	// }	
 }
 
 void CacheTrie::completeExpansion(AnyNode *& enode) {
@@ -332,12 +376,12 @@ void CacheTrie::copyToWide(AnyNode *& node) {
 					if (node->anode.wide[pos] == temp){
 						if (DEBUG) std::cout << "[9]inserting " << curr->snode.value << " at wide " << pos << " and level " << node->anode.level << "\n" << std::endl;
 						node->anode.wide[pos] = curr;
-					} 
+					} else {
+						std::cout << "failure to insert " << curr->snode.value << " at wide " << pos << " and level " << node->anode.level << "\n" << std::endl;
+					}
 				#ifdef _USE_TSX
 				}
 				#endif
-				// curr->txn.compare_exchange_weak(txn, NoTxn);
-				// node->anode.wide[pos].compare_exchange_weak(temp, curr);
 				break;
 			case ANODE:
 				std::cout << "anode found in copy..uh oh" << std::endl;
@@ -418,7 +462,7 @@ void CacheTrie::freeze(AnyNode *& current) {
 			}
 			else if (oldTxn != FSNode) {
 				Txn oldTxn = node->txn;
-				// commit the pending changes ?
+				// commit the pending changes ? //HERE?????????????
 				i--;
 			}
 		}
@@ -547,8 +591,14 @@ AnyNode** CacheTrie::createCache(int level, AnyNode* parent []) {
 }
 
 void CacheTrie::printTree(ANode* anode) {
+	printTree(anode, "");
+}
+
+void CacheTrie::printTree(ANode* anode, std::string formatString) {
 
 	int length = (anode->isWide ? 16 : 4);
+
+	std::cout << formatString << "Beginning new search at level " << anode->level << " type " << (anode->isWide ? "wide" : "narrow") << std::endl;
 
 	for (int i = 0; i < length; i++) {
 
@@ -559,16 +609,17 @@ void CacheTrie::printTree(ANode* anode) {
 		if (node != 0) {
 			switch (node->nodeType) {
 			case SNODE:
-				std::cout << node->snode.value << " at location " << i << std::endl;
+				std::cout << formatString << node->snode.value << " at location " << i << std::endl;
 				break;
 			case ANODE:
-				std::cout << "Traverse anode at " << i << " and level " << (node->anode.level + 4) << std::endl;
-				printTree(&node->anode);
-				std::cout << "End traversal anode at " << i << std::endl;
+				std::cout << formatString << "Traverse anode at location " << i << " and level " << (node->anode.level) << std::endl;
+				std::string newFormatString = formatString + "\t";
+				printTree(&node->anode, newFormatString);
+				std::cout << formatString << "End traversal anode at location " << i << " and level " << (node->anode.level) << std::endl;
 				break;
 			}
 		}
-	}
+	}	
 }
 
 void CacheTrie::inhabit(AnyNode** cache, AnyNode* newValue, std::size_t hash, int cacheeLevel) {
