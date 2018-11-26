@@ -41,12 +41,12 @@ int main() {
 
 	// SEG FAULTS bigger numbers 
 	int n = 0;
-	for(int i = 100; i <= ((100 * NUM_THREADS) + 100); i++) {
+	for(int i = 1; i <= ((NUM_THREADS * 80000) + 100); i++) {
 		int value = ctrie->lookup(i);
 		if (value != 0) {
 			n++;
 			std::cout << value << std::endl;
-		}
+		} 
 	}
 	std::cout << "Items successfully inserted/found: " << n << std::endl;
 

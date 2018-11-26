@@ -1,3 +1,0 @@
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/build/CMakeFiles/Concurrent-cache-trie.dir
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/build/CMakeFiles/edit_cache.dir
-C:/Users/rebeca/Desktop/Fall 2018/COP 6616 - Multicore Programming/Project/ConcurrentCacheTrie/build/CMakeFiles/rebuild_cache.dir
