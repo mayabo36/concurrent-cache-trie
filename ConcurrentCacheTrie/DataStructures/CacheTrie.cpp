@@ -105,6 +105,7 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				newNode->nodeType = ENODE;
 
 				AnyNode* parentANode = previous->anode.wide[previousPos];
+
 				if (previous->anode.wide[previousPos].compare_exchange_weak(parentANode, newNode)) {
 					if (DEBUG) std::cout << "[4]inserting enode at wide " << previousPos << " and level " << (level - 4) << "\n" << std::endl;
 					completeExpansion(newNode);
@@ -128,11 +129,8 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				snode1->snode.value = old->snode.value;
 				snode1->nodeType = SNODE;
 				int snode1Pos = (snode1->snode.hash >> (newNode->anode.level)) & (4 - 1);
-				AnyNode* temp1 = newNode->anode.narrow[snode1Pos];
 
-				AnyNode* t = NULL;
-
-				if (insert(old->snode.value, old->snode.hash, newNode->anode.level, newNode, current)) {//newNode->anode.narrow[snode1Pos].compare_exchange_weak(temp1, snode1)){
+				if (insert(old->snode.value, old->snode.hash, newNode->anode.level, newNode, current)) {
 					if (DEBUG) std::cout << "[5]inserting " << snode1->snode.value << " at narrow " << snode1Pos << " and level " << newNode->anode.level << "\n" << std::endl;
 				}else {
 					std::cout << "failure to insert " << snode1->snode.value << " at narrow " << snode1Pos << " and level " << newNode->anode.level << "\n" << std::endl;
@@ -144,9 +142,8 @@ bool CacheTrie::insert(int value, std::size_t hash, int level, AnyNode *& curren
 				snode2->snode.value = value;
 				snode2->nodeType = SNODE;
 				int snode2Pos = (snode2->snode.hash >> (newNode->anode.level)) & (4 - 1);
-				AnyNode* temp2 = newNode->anode.narrow[snode2Pos];
 				
-				if (insert(value, hash, newNode->anode.level, newNode, current)){//newNode->anode.narrow[snode2Pos].compare_exchange_weak(temp2, snode2)){
+				if (insert(value, hash, newNode->anode.level, newNode, current)){
 					if (DEBUG) std::cout << "[5]inserting " << snode2->snode.value << " at narrow " << snode2Pos << " and level " << newNode->anode.level << "\n" << std::endl;
 				}else {
 					std::cout << "failure to insert " << snode2->snode.value << " at narrow " << snode2Pos << " and level " << newNode->anode.level << "\n" << std::endl;
@@ -192,67 +189,19 @@ bool CacheTrie::insert(int value) {
 		insert(value);
 }
 
-void CacheTrie::testInsert(int thread_id) {
+std::string CacheTrie::testTrie(int thread_id) {
 
-	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 100); i++) {
+	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 10000); i++) {
 		insert(i);
 	}
-	// if (thread_id == 1) {
-	// 	insert(16);
-	// 	insert(32);
-	// 	insert(48);
-	// 	insert(64);
-	// 	insert(80);
-	// 	insert(96);
-	// 	insert(112);
-	// 	insert(128);
-	// 	insert(144);
-	// 	insert(160);
-	// 	insert(176);
-	// 	insert(192);
-	// 	insert(208);
-	// 	insert(224);
-	// 	insert(240);
-	// 	insert(256);
-	// }
 
-	// if (thread_id == 2) {
-	// 	insert(512);
-	// 	insert(768);
-	// 	insert(1024);
-	// 	insert(1280);
-	// 	insert(1536);
-	// 	insert(1792);
-	// 	insert(2048);
-	// 	insert(2304);
-	// 	insert(2560);
-	// 	insert(2816);
-	// 	insert(3072);
-	// 	insert(3328);
-	// 	insert(3584);
-	// 	insert(3840);
-	// 	insert(4096);
-	// 	insert(4352);
-	// }
-	
-	// if (thread_id == 3) {
-	// 	insert(8704);
-	// 	insert(13056);
-	// 	insert(17408);
-	// 	insert(21760);
-	// 	insert(26112);
-	// 	insert(30468);
-	// 	insert(34820);
-	// 	insert(39172);
-	// 	insert(43524);
-	// 	insert(47876);
-	// 	insert(52228);
-	// 	insert(56580);
-	// 	insert(60932);
-	// 	insert(65284);
-	// 	insert(69636);
-	// 	insert(73988);
-	// }
+	int n = 0; 
+	for (int i = (100 * thread_id); i <= ((100 * thread_id) + 10000); i++) {
+		if (lookup(i) != 0) n++;
+	}
+
+	std::string result = "Thread " + std::to_string(thread_id) + " inserted values " + std::to_string(100 * thread_id) + " through " + std::to_string((100 * thread_id) + 10000) + " and successfully lookedup " + std::to_string(n) + " of those values.";
+	return result;
 }
 
 void CacheTrie::completeExpansion(AnyNode *& enode) {
@@ -295,7 +244,6 @@ void CacheTrie::copyToWide(AnyNode *& node) {
 				std::cout << "anode found in copy..uh oh" << std::endl;
 				break; // hmm
 			}
-
 		}
 	}
 
@@ -322,7 +270,7 @@ void CacheTrie::freeze(AnyNode *& current) {
 
 			Txn oldTxn = node->txn;
 			if (!node->txn.compare_exchange_weak(oldTxn, FVNode))
-			i--;
+				i--;
 		}
 		else if (node->nodeType == SNODE) {
 			Txn oldTxn = node->txn;
