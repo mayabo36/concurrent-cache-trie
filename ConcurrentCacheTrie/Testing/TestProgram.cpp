@@ -7,6 +7,7 @@
 
 #define NUM_THREADS 8
 
+
 CacheTrie* ctrie;
 std::string thread_results[NUM_THREADS];
 
