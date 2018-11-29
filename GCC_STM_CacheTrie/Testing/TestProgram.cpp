@@ -45,7 +45,7 @@ int main() {
 
 	auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
 
-	std::cout << "Nanoseconds to complete all operations: " << duration.count() << std::endl;
+	std::cout << "Seconds to complete all operations: " << duration.count() << std::endl;
 
 	// ANode* tempRoot = &ctrie->root->anode;
 	// std::cout << "\n\nTree Print:" << std::endl;
